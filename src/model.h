@@ -14,6 +14,13 @@ namespace vulkan_fem
 		precision z;
 	};
 
+	template <uint32_t DIM>
+	struct DimentionHelper;
+
+	template <>
+	struct DimentionHelper<2>
+	{
+	};
 
 	template <uint32_t DIM = 3>
 	class Model
@@ -48,15 +55,16 @@ namespace vulkan_fem
 
 			const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
-			const uint32_t ndof = element_type_->GetNDof();
+			const uint32_t element_count = element_type_->GetElementCount();
 			const uint32_t order = element_type_->GetOrder();
 
-			MatrixFixedCols<DIM> elem_transform(ndof, DIM);
+			MatrixFixedCols<DIM> elem_transform(element_count, DIM);
 			std::vector<precision> jacobian_determinants;
 
 			for(uint32_t index = 0; index < element_inidices_.size();)
 			{
-				for(uint16_t sub_index = 0; sub_index < ndof && index + sub_index < element_inidices_.size(); ++sub_index)
+				// put all vertex transforms into matrix
+				for(uint16_t sub_index = 0; sub_index < element_count && index + sub_index < element_inidices_.size(); ++sub_index)
 				{
 					const uint16_t sub_element_index = element_inidices_[index + sub_index];
 					const Vertex3& sub_element_vertex = elements_[sub_element_index];
@@ -66,46 +74,92 @@ namespace vulkan_fem
 					else if (DIM == 3)
 						elem_transform.row(sub_index) << sub_element_vertex.x, sub_element_vertex.y, sub_element_vertex.z;
 				}
-
-				index += ndof;
 				
 				jacobian_determinants.clear();
-				auto elem_matrix = element_type_->CalcElementMatrix(elem_transform, jacobian_determinants);
-				auto b_matrix = makeStrainMatrix(ndof, elem_matrix);
+				auto elem_matrix = calcElementMatrix(element_type_, elem_transform, jacobian_determinants);
+				auto b_matrix = makeStrainMatrix(element_count, elem_matrix);
 
 				auto d_matrix = material_.GetStiffnessMatrix();
 
 				auto elementStiffnesMatrix = b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
 
-				for (int i = 0; i < ndof; i++)
+				for (uint32_t i = 0; i < element_count; ++i)
 				{
-					for (int j = 0; j < ndof; j++)
+					for (uint32_t j = 0; j < element_count; ++j)
 					{
-						Eigen::Triplet<float> trplt11(2 * nodesIds[i] + 0, 2 * nodesIds[j] + 0, K(2 * i + 0, 2 * j + 0));
-						Eigen::Triplet<float> trplt12(2 * nodesIds[i] + 0, 2 * nodesIds[j] + 1, K(2 * i + 0, 2 * j + 1));
-						Eigen::Triplet<float> trplt21(2 * nodesIds[i] + 1, 2 * nodesIds[j] + 0, K(2 * i + 1, 2 * j + 0));
-						Eigen::Triplet<float> trplt22(2 * nodesIds[i] + 1, 2 * nodesIds[j] + 1, K(2 * i + 1, 2 * j + 1));
+						const uint16_t global_index_i = element_inidices_[index + i];
+						const uint16_t global_index_j = element_inidices_[index + j];
+
+						// x coords
+						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 0)
+							= elementStiffnesMatrix(DIM * i + 0, DIM * j + 0);
+						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 1)
+							= elementStiffnesMatrix(DIM * i + 0, DIM * j + 1);
+
+						// y coords
+						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 0)
+							= elementStiffnesMatrix(DIM * i + 1, DIM * j + 0);
+						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 1)
+							= elementStiffnesMatrix(DIM * i + 1, DIM * j + 1);
 					}
 				}
+				
 
+				index += element_count;
 			}
 
 		}
 
 	private:
 
+		// N matrix
+		// [ Ni 0 
+		// [ 0  Ni
+		// [ Ni Ni
+		MatrixFixedRows<DIM> calcElementMatrix(
+			std::shared_ptr<ScalarElement<DIM>> element_type,
+			const MatrixFixedCols<DIM> &elem_transform,
+			std::vector<precision> &jacobian_determinants)
+		{
+			MatrixFixedRows<DIM> elementMatrix = MatrixFixedRows<DIM>(DIM, element_type->GetElementCount());
+			const std::vector<std::vector<precision>> & integration_points {{0.25, 0.25, 0.25}};
+			jacobian_determinants.reserve(integration_points.size());
 
-		Eigen::Matrix<precision, 3, 6>  makeStrainMatrix(const uint16_t ndof, const MatrixFixedRows<DIM> &elem_matrix)
+			for (const auto& ip : integration_points)
+			{
+				auto shape_function = element_type->CalcShape(ip);
+				auto dshape = element_type->CalcDShape(ip);
+
+				// build jacobian (d(x, y, z)/d(xi, eta, zeta))
+				const MatrixDim<DIM> jacobian = dshape * elem_transform;
+				const precision jacobian_det = jacobian.determinant();
+				const MatrixDim<DIM> inverse_jacobian = jacobian.inverse();
+
+				//element matrix 
+				elementMatrix += inverse_jacobian * dshape;
+				jacobian_determinants.push_back(jacobian_det);
+			}
+
+			return elementMatrix;
+		}
+
+		// B matrix
+		// [ Nix 0 
+		// [ 0   Niy
+		// [ Niy Nix
+		Eigen::Matrix<precision, 3, 6> makeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix)
 		{
 			Eigen::Matrix<precision, 3, 6> strain_matrix;
-			for (int i = 0; i < 3; ++i)
+			for (int i = 0; i < element_count; ++i)
 			{
-				strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);
+				strain_matrix(0, 2 * i + 0) = elem_matrix(0, i); // Nix
 				strain_matrix(0, 2 * i + 1) = 0.0f;
+
 				strain_matrix(1, 2 * i + 0) = 0.0f;
-				strain_matrix(1, 2 * i + 1) = elem_matrix(1, i);
-				strain_matrix(2, 2 * i + 0) = elem_matrix(1, i);
-				strain_matrix(2, 2 * i + 1) = elem_matrix(0, i);
+				strain_matrix(1, 2 * i + 1) = elem_matrix(1, i); // Niy
+
+				strain_matrix(2, 2 * i + 0) = elem_matrix(1, i); // Niy
+				strain_matrix(2, 2 * i + 1) = elem_matrix(0, i); // Nix
 			}
 			return strain_matrix;
 		}

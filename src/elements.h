@@ -15,9 +15,9 @@ namespace vulkan_fem
 	{
 	public:
 		//nuber of dofs
-		uint32_t GetNDof() const
+		uint32_t GetElementCount() const
 		{
-			return ndof_;
+			return element_count_;
 		}
 		//element order
 		uint32_t GetOrder() const
@@ -27,14 +27,14 @@ namespace vulkan_fem
 
 	protected:
 
-		Element(uint32_t ndof, uint32_t order)
-			: ndof_(ndof)
+		Element(uint32_t element_count, uint32_t order)
+			: element_count_(element_count)
 			, order_(order)
 		{}
 
 	private:
 
-		uint32_t ndof_;
+		uint32_t element_count_;
 		uint32_t order_;
 	};
 
@@ -54,35 +54,6 @@ namespace vulkan_fem
 		: public Element<DIM>
 	{
 	public:
-
-		MatrixFixedRows<DIM> CalcElementMatrix(const MatrixFixedCols<DIM> &elem_transform,
-										 std::vector<precision> &jacobian_determinants)
-		{
-
-			MatrixFixedRows<DIM> elementMatrix = MatrixFixedRows<DIM>(DIM, this->GetNDof());
-			const std::vector<std::vector<precision>> & integration_points{{0.25, 0.25, 0.25}};
-			jacobian_determinants.reserve(integration_points.size());
-			
-			for(int i = 0; i < integration_points.size(); ++i)
-			{
-				auto ip = integration_points[i];
-				auto shape_function = CalcShape(ip);
-				auto dshape = CalcDShape(ip);
-
-				// build jacobian (d(x, y, z)/d(xi, eta, zeta))
-
-				const MatrixDim<DIM> jacobian = dshape * elem_transform;
-				const precision jacobian_det = jacobian.determinant();
-				const MatrixDim<DIM> inverse_jacobian = jacobian.inverse();
-
-				//element matrix 
-				elementMatrix = inverse_jacobian * dshape;
-				jacobian_determinants.push_back(jacobian_det);
-			}
-
-			return elementMatrix;
-		}
-
 		// calculate shape functions
 		// ip - integration point
 		// shape - shape function values
@@ -92,8 +63,8 @@ namespace vulkan_fem
 		virtual MatrixFixedRows<DIM, precision> CalcDShape(const std::vector<precision> & ip) = 0;
 
 	protected:
-		ScalarElement(uint32_t ndof, uint32_t order)
-			: Element<DIM>(ndof, order)
+		ScalarElement(uint32_t element_count, uint32_t order)
+			: Element<DIM>(element_count, order)
 		{}
 	};
 
@@ -164,15 +135,15 @@ namespace vulkan_fem
 			MatrixFixedRows<2, precision> dshape = Eigen::Matrix<precision, 2, 3>();
 			// 1st row
 			// dN(i) / dXi
-			dshape(0, 0) = -1;
-			dshape(0, 1) = 1;
-			dshape(0, 2) = 0;
+			dshape(0, 0) = -1.;
+			dshape(0, 1) = 1.;
+			dshape(0, 2) = .0;
 
 			// 2nd row
 			// dN(i) / dEta
-			dshape(1, 0) = -1;
-			dshape(1, 1) = 0;
-			dshape(1, 2) = 1;
+			dshape(1, 0) = -1.;
+			dshape(1, 1) = .0;
+			dshape(1, 2) = 1.;
 
 			return dshape;
 		}
@@ -187,7 +158,7 @@ namespace vulkan_fem
 
 	public:
 		Element2dTo3d(std::shared_ptr<ScalarElement<2>> elem)
-			: ScalarElement<3>(elem->GetNDof(), elem->GetOrder())
+			: ScalarElement<3>(elem->GetElementCount(), elem->GetOrder())
 			, elem_(elem)
 		{}
 

@@ -25,18 +25,18 @@ namespace vulkan_fem
 
 		LinearMaterial(double E, double nu)
 		{
-			const precision lambda = E * nu / (1. + nu) / (1. + 2. * nu);
-			const precision mu = E / 2 / (1. + nu);
+			const precision lambda = (precision)(E * nu / (1. + nu) / (1. + 2. * nu));
+			const precision mu = (precision)(E / 2 / (1. + nu));
 
-			const precision c1 = lambda + 2. * mu;
+			const precision c1 = (precision)(lambda + 2. * mu);
 
 			stiffnesMatrix <<
-				c1, lambda, lambda, 0, 0, 0,
-				lambda, c1, lambda, 0, 0, 0,
-				lambda, lambda, c1, 0, 0, 0,
-				0, 0, 0, mu, 0, 0,
-				0, 0, 0, 0, mu, 0,
-				0, 0, 0, 0, 0, mu;
+				c1, lambda, lambda, .0, .0, .0,
+				lambda, c1, lambda, .0, .0, .0,
+				lambda, lambda, c1, .0, .0, .0,
+				.0, .0, .0, mu, .0, .0,
+				.0, .0, .0, .0, mu, .0,
+				.0, .0, .0, .0, .0, mu;
 		}
 
 		virtual Eigen::Matrix<precision, 6, 6> GetStiffnessMatrix()
@@ -58,11 +58,11 @@ namespace vulkan_fem
 		LinearMaterial(double E, double nu)
 		{
 			stiffnesMatrix <<
-				1.0f, nu, 0.0f,
-				nu, 1.0, 0.0f,
-				0.0f, 0.0f, (1.0f - nu) / 2.0f;
+				1.0				, (precision)(nu)	, .0,
+				(precision)(nu)	, 1.0				, .0,
+				0.0				, 0.0				, (precision)((1.0 - nu) / 2.);
 
-			stiffnesMatrix *= E / (1.0f - pow(nu, 2.0f));
+			stiffnesMatrix *= (precision)(E / (1.0 - pow(nu, 2.)));
 		}
 
 		virtual Eigen::Matrix<precision, 3, 3> GetStiffnessMatrix()
@@ -74,4 +74,5 @@ namespace vulkan_fem
 
 	};
 }
+
 #endif // Material_h__
