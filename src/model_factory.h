@@ -24,7 +24,7 @@ namespace vulkan_fem
 			return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(),
 											  vertices,
 											  indices,
-											  0.2e12, 0.3); // 200GPa, 0.3 Young, Poisson's for steel
+											  0.2e4, 0.3); // 200GPa, 0.3 Young, Poisson's for steel
 		}
 
 		//static std::shared_ptr<Model<3>> CreateCylinderModel(const precision r, const precision h)

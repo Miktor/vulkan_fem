@@ -12,7 +12,8 @@ namespace vulkan_fem
 
 		void Solve(Model<DIM> & model)
 		{
-			model.BuildGlobalStiffnesMatrix();
+			auto global_stiffnes_matrix = model.BuildGlobalStiffnesMatrix(); // K_global
+
 		}
 	};
 

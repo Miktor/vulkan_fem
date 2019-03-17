@@ -49,9 +49,9 @@ namespace vulkan_fem
 			return element_inidices_;
 		}
 
-		void BuildGlobalStiffnesMatrix()
+		MatrixX BuildGlobalStiffnesMatrix()
 		{
-			MatrixX global_stiffness_matrix = MatrixX(elements_.size(), elements_.size());
+			MatrixX global_stiffness_matrix = MatrixX::Zero(elements_.size() * DIM, elements_.size() * DIM);
 
 			const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
@@ -81,7 +81,7 @@ namespace vulkan_fem
 
 				auto d_matrix = material_.GetStiffnessMatrix();
 
-				auto elementStiffnesMatrix = b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
+				Eigen::Matrix<precision, 6, 6> elementStiffnesMatrix = b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
 
 				for (uint32_t i = 0; i < element_count; ++i)
 				{
@@ -92,15 +92,15 @@ namespace vulkan_fem
 
 						// x coords
 						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 0)
-							= elementStiffnesMatrix(DIM * i + 0, DIM * j + 0);
+							+= elementStiffnesMatrix(DIM * i + 0, DIM * j + 0);
 						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 1)
-							= elementStiffnesMatrix(DIM * i + 0, DIM * j + 1);
+							+= elementStiffnesMatrix(DIM * i + 0, DIM * j + 1);
 
 						// y coords
 						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 0)
-							= elementStiffnesMatrix(DIM * i + 1, DIM * j + 0);
+							+= elementStiffnesMatrix(DIM * i + 1, DIM * j + 0);
 						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 1)
-							= elementStiffnesMatrix(DIM * i + 1, DIM * j + 1);
+							+= elementStiffnesMatrix(DIM * i + 1, DIM * j + 1);
 					}
 				}
 				
@@ -108,6 +108,7 @@ namespace vulkan_fem
 				index += element_count;
 			}
 
+			return global_stiffness_matrix;
 		}
 
 	private:
@@ -121,7 +122,7 @@ namespace vulkan_fem
 			const MatrixFixedCols<DIM> &elem_transform,
 			std::vector<precision> &jacobian_determinants)
 		{
-			MatrixFixedRows<DIM> elementMatrix = MatrixFixedRows<DIM>(DIM, element_type->GetElementCount());
+			MatrixFixedRows<DIM> elementMatrix = MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
 			const std::vector<std::vector<precision>> & integration_points {{0.25, 0.25, 0.25}};
 			jacobian_determinants.reserve(integration_points.size());
 
