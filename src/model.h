@@ -14,6 +14,30 @@ namespace vulkan_fem
 		precision z;
 	};
 
+	struct Constraint
+	{
+		enum Type
+		{
+			UX = 1 << 0,
+			UY = 1 << 1,
+			UZ = 1 << 2,
+			UXY = UX | UY,
+			UXZ = UX | UZ,
+			UYZ = UY | UZ,
+			UXYZ = UX | UY | UZ
+		};
+
+		uint32_t node;
+		Type type;
+	};
+
+	template <uint32_t DIM>
+	struct Load
+	{
+		uint32_t node;
+		precision forces[DIM];
+	};
+
 	template <uint32_t DIM>
 	struct DimentionHelper;
 
@@ -30,11 +54,15 @@ namespace vulkan_fem
 		Model(std::shared_ptr<ScalarElement<DIM>> element_type,
 			  const std::vector<Vertex3> &vertices,
 			  const std::vector<uint16_t> &indices,
+			  const std::vector<Constraint> &constraints,
+			  const std::vector<Load<DIM>> &loads,
 			  double E, double mu)
 			: element_type_(element_type)
 			, material_(E, mu)
 			, elements_(vertices)
 			, element_inidices_(indices)
+			, constraints_(constraints)
+			, loads_(loads)
 		{
 
 		}
@@ -111,6 +139,35 @@ namespace vulkan_fem
 			return global_stiffness_matrix;
 		}
 
+		void ApplyConstraints(MatrixX &global_stiffnes_matrix)
+		{
+			std::vector<int> indicesToConstraint;
+
+			for (const auto it : constraints_)
+			{
+				switch (DIM)
+				{
+					case 3:
+						if (it->type & Constraint::UZ)
+						{
+							indicesToConstraint.push_back(DIM * it->node + 2);
+						}
+					case 2:
+						if (it->type & Constraint::UY)
+						{
+							indicesToConstraint.push_back(DIM * it->node + 1);
+						}
+					case 1:
+						if (it->type & Constraint::UX)
+						{
+							indicesToConstraint.push_back(DIM * it->node + 0);
+						}
+					default:
+						break;
+				}
+			}
+		}
+
 	private:
 
 		// N matrix
@@ -171,6 +228,8 @@ namespace vulkan_fem
 		std::vector<Vertex3> elements_;
 		std::vector<uint16_t> element_inidices_;
 		std::vector<ElementTransformations<DIM>> element_transformations_;
+		std::vector<Constraint> constraints_;
+		std::vector<Load<DIM>> loads_;
 	};
 } // vulkan_fem
 

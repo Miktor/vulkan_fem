@@ -21,9 +21,13 @@ namespace vulkan_fem
 			std::vector<Vertex3> vertices = {{.0, .0},{1.0, .0},{.0, 1.0},{1.0, 1.0},};
 			std::vector<uint16_t> indices = {0, 1, 2, 1, 3, 2};
 
+			std::vector<Constraint> constraints = {{0, Constraint::UXY}, {0, Constraint::UY}};
+			std::vector<Load<2>> loads = {{2, {0, 1.}}, {3, {0, 1.}}};
+
 			return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(),
 											  vertices,
 											  indices,
+											  constraints, loads,
 											  0.2e4, 0.3); // 200GPa, 0.3 Young, Poisson's for steel
 		}
 
