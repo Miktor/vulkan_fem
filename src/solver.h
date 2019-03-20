@@ -17,7 +17,10 @@ namespace vulkan_fem
 			model.ApplyConstraints(global_stiffnes_matrix);
 
 			Eigen::SimplicialLDLT<decltype(global_stiffnes_matrix)> solver(global_stiffnes_matrix);
-			Eigen::VectorXf displacements = solver.solve(loads);
+			std::cout << global_stiffnes_matrix << std::endl;
+ 			Eigen::VectorXf displacements = solver.solve(model.GetLoads());
+
+			std::cout << displacements << std::endl;
 		}
 	};
 

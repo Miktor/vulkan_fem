@@ -51,6 +51,9 @@ namespace vulkan_fem
 	{
 	public:
 
+		typedef Eigen::SparseMatrix <precision> ElementMatrix;
+		typedef Eigen::Matrix<precision, 1, Eigen::Dynamic> Loads;
+
 		Model(std::shared_ptr<ScalarElement<DIM>> element_type,
 			  const std::vector<Vertex3> &vertices,
 			  const std::vector<uint16_t> &indices,
@@ -62,7 +65,7 @@ namespace vulkan_fem
 			, elements_(vertices)
 			, element_inidices_(indices)
 			, constraints_(constraints)
-			, loads_(loads)
+			, loads_(buildLoadsVector(loads))
 		{
 
 		}
@@ -77,9 +80,14 @@ namespace vulkan_fem
 			return element_inidices_;
 		}
 
-		MatrixX BuildGlobalStiffnesMatrix()
+		Eigen::VectorXf GetLoads()
 		{
-			MatrixX global_stiffness_matrix = MatrixX::Zero(elements_.size() * DIM, elements_.size() * DIM);
+			return loads_;
+		}
+
+		ElementMatrix BuildGlobalStiffnesMatrix()
+		{
+			ElementMatrix global_stiffness_matrix(elements_.size() * DIM, elements_.size() * DIM);
 
 			const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
@@ -88,6 +96,10 @@ namespace vulkan_fem
 
 			MatrixFixedCols<DIM> elem_transform(element_count, DIM);
 			std::vector<precision> jacobian_determinants;
+
+			typedef Eigen::Triplet<precision> T;
+			std::vector<T> triplets;
+			triplets.reserve(element_count * element_count * number_of_elements);
 
 			for(uint32_t index = 0; index < element_inidices_.size();)
 			{
@@ -119,16 +131,16 @@ namespace vulkan_fem
 						const uint16_t global_index_j = element_inidices_[index + j];
 
 						// x coords
-						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 0)
-							+= elementStiffnesMatrix(DIM * i + 0, DIM * j + 0);
-						global_stiffness_matrix(DIM * global_index_i + 0, DIM * global_index_j + 1)
-							+= elementStiffnesMatrix(DIM * i + 0, DIM * j + 1);
+						triplets.push_back(T(DIM * global_index_i + 0, DIM * global_index_j + 0
+										   , elementStiffnesMatrix(DIM * i + 0, DIM * j + 0)));
+						triplets.push_back(T(DIM * global_index_i + 0, DIM * global_index_j + 1
+										   , elementStiffnesMatrix(DIM * i + 0, DIM * j + 1)));
 
 						// y coords
-						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 0)
-							+= elementStiffnesMatrix(DIM * i + 1, DIM * j + 0);
-						global_stiffness_matrix(DIM * global_index_i + 1, 2 * global_index_j + 1)
-							+= elementStiffnesMatrix(DIM * i + 1, DIM * j + 1);
+						triplets.push_back(T(DIM * global_index_i + 1, 2 * global_index_j + 0
+										   , elementStiffnesMatrix(DIM * i + 1, DIM * j + 0)));
+						triplets.push_back(T(DIM * global_index_i + 1, 2 * global_index_j + 1
+										   , elementStiffnesMatrix(DIM * i + 1, DIM * j + 1)));
 					}
 				}
 				
@@ -136,39 +148,58 @@ namespace vulkan_fem
 				index += element_count;
 			}
 
+			global_stiffness_matrix.setFromTriplets(triplets.begin(), triplets.end());
 			return global_stiffness_matrix;
 		}
 
-		void ApplyConstraints(MatrixX &global_stiffnes_matrix)
+		void ApplyConstraints(ElementMatrix &global_stiffnes_matrix)
 		{
 			std::vector<int> indicesToConstraint;
 
-			for (const auto it : constraints_)
+			for (const auto contraint : constraints_)
 			{
 				switch (DIM)
 				{
 					case 3:
-						if (it->type & Constraint::UZ)
-						{
-							indicesToConstraint.push_back(DIM * it->node + 2);
-						}
+						if (contraint.type & Constraint::UZ)
+							indicesToConstraint.push_back(DIM * contraint.node + 2);
 					case 2:
-						if (it->type & Constraint::UY)
-						{
-							indicesToConstraint.push_back(DIM * it->node + 1);
-						}
+						if (contraint.type & Constraint::UY)
+							indicesToConstraint.push_back(DIM * contraint.node + 1);
 					case 1:
-						if (it->type & Constraint::UX)
-						{
-							indicesToConstraint.push_back(DIM * it->node + 0);
-						}
+						if (contraint.type & Constraint::UX)
+							indicesToConstraint.push_back(DIM * contraint.node + 0);
 					default:
 						break;
+				}
+			}
+
+			for (int k = 0; k < global_stiffnes_matrix.outerSize(); ++k)
+			{
+				for (ElementMatrix::InnerIterator it(global_stiffnes_matrix, k); it; ++it)
+				{
+					for (auto index : indicesToConstraint)
+					{
+						if (it.row() == index || it.col() == index)
+						{
+							it.valueRef() = it.row() == it.col() ? 1.0f : 0.0f;
+						}
+					}
 				}
 			}
 		}
 
 	private:
+		Loads buildLoadsVector(const std::vector<Load<DIM>> &loads)
+		{
+			Loads load_vector = Loads::Zero(elements_.size() * DIM);
+			for (auto load : loads)
+			{
+				for(uint32_t i = 0; i < DIM; ++i)
+					load_vector[load.node * DIM + i] = load.forces[i];
+			}
+			return load_vector;
+		}
 
 		// N matrix
 		// [ Ni 0 
@@ -229,8 +260,10 @@ namespace vulkan_fem
 		std::vector<uint16_t> element_inidices_;
 		std::vector<ElementTransformations<DIM>> element_transformations_;
 		std::vector<Constraint> constraints_;
-		std::vector<Load<DIM>> loads_;
+		Loads loads_;
 	};
 } // vulkan_fem
 
 #endif // model_h__
+
+

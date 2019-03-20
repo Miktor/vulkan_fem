@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Eigen/Dense"
+#include "Eigen/Sparse"
 
 namespace vulkan_fem
 {
@@ -23,7 +24,6 @@ namespace vulkan_fem
 	template <size_t DIM = 3, typename Scalar = precision>
 	using MatrixStrain = Eigen::Matrix <Scalar, DIM, DIM>;
 
-	using MatrixX = Eigen::Matrix <precision, Eigen::Dynamic, Eigen::Dynamic>;
 }
 
 #endif // fem_h__
