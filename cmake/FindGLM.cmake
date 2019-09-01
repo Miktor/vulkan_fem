@@ -1,4 +1,3 @@
-
 #
 # Find GLM
 #
@@ -20,27 +19,18 @@ include(FindPackageHandleStandardArgs)
 
 if (WIN32)
 	# Find include files
-	find_path(
-		GLM_INCLUDE_DIR
-		NAMES
-			glm/glm.hpp
-		PATHS
-			$ENV{PROGRAMFILES}/include
-			${GLM_ROOT_DIR}/include
-			$ENV{PATH}
-		DOC "The directory where glm/glm.hpp resides")
+	find_path(GLM_INCLUDE_DIR glm/glm.hpp)
 else()
 	# Find include files
 	find_path(
 		GLM_INCLUDE_DIR
-		NAMES
-			glm/glm.hpp
+		NAMES glm/glm.hpp
 		PATHS
-			/usr/include
-			/usr/local/include
-			/sw/include
-			/opt/local/include
-			${GLM_ROOT_DIR}/include
+		/usr/include
+		/usr/local/include
+		/sw/include
+		/opt/local/include
+		${GLM_ROOT_DIR}/include
 		DOC "The directory where glm/glm.hpp resides")
 endif()
 

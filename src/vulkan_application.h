@@ -1,6 +1,8 @@
 #ifndef vulkan_application_h__
 #define vulkan_application_h__
 
+#define NO_MINMAX
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -10,6 +12,8 @@
 #include <fstream>
 #include <set>
 #include <vector>
+#include <limits>
+
 
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"
@@ -77,7 +81,7 @@ namespace vulkan_fem
 
 		VulkanApplication(){}
 		virtual ~VulkanApplication(){}
-		
+
 		void Run()
 		{
 			initWindow();
@@ -130,7 +134,7 @@ namespace vulkan_fem
 
 			return shaderModule;
 		}
-		
+
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 		{
 			VkPhysicalDeviceMemoryProperties memProperties;
@@ -324,7 +328,7 @@ namespace vulkan_fem
 
 			glfwTerminate();
 		}
-					   
+
 		void createInstance()
 		{
 			if(enableValidationLayers && !checkValidationLayerSupport())
@@ -615,7 +619,7 @@ namespace vulkan_fem
 				throw std::runtime_error("failed to create descriptor set layout!");
 			}
 		}
-		
+
 		void createFramebuffers()
 		{
 			swapChainFramebuffers.resize(swapChainImageViews.size());
@@ -655,7 +659,7 @@ namespace vulkan_fem
 				throw std::runtime_error("failed to create graphics command pool!");
 			}
 		}
-	
+
 		VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 		{
 			if(availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED)
