@@ -5,74 +5,55 @@
 
 #include <Eigen/Dense>
 
-namespace vulkan_fem
-{
-	class Material
-	{
-	public:
+namespace vulkan_fem {
+class Material {
+ public:
+};
 
-	};
+template <uint32_t DIM>
+class LinearMaterial {};
 
-	template <uint32_t DIM>
-	class LinearMaterial {};
+template <>
+class LinearMaterial<3> : public Material {
+ public:
+  Eigen::Matrix<precision, 6, 6> stiffnesMatrix;
 
-	template <>
-	class LinearMaterial<3> : public Material
-	{
-	public:
+  LinearMaterial(double E, double nu) {
+    const precision lambda = (precision)(E * nu / (1. + nu) / (1. + 2. * nu));
+    const precision mu = (precision)(E / 2 / (1. + nu));
 
-		Eigen::Matrix<precision, 6, 6> stiffnesMatrix;
+    const precision c1 = (precision)(lambda + 2. * mu);
 
-		LinearMaterial(double E, double nu)
-		{
-			const precision lambda = (precision)(E * nu / (1. + nu) / (1. + 2. * nu));
-			const precision mu = (precision)(E / 2 / (1. + nu));
+    stiffnesMatrix << c1, lambda, lambda, .0, .0, .0, lambda, c1, lambda, .0,
+        .0, .0, lambda, lambda, c1, .0, .0, .0, .0, .0, .0, mu, .0, .0, .0, .0,
+        .0, .0, mu, .0, .0, .0, .0, .0, .0, mu;
+  }
 
-			const precision c1 = (precision)(lambda + 2. * mu);
+  virtual Eigen::Matrix<precision, 6, 6> GetStiffnessMatrix() {
+    return stiffnesMatrix;
+  }
 
-			stiffnesMatrix <<
-				c1, lambda, lambda, .0, .0, .0,
-				lambda, c1, lambda, .0, .0, .0,
-				lambda, lambda, c1, .0, .0, .0,
-				.0, .0, .0, mu, .0, .0,
-				.0, .0, .0, .0, mu, .0,
-				.0, .0, .0, .0, .0, mu;
-		}
+ private:
+};
 
-		virtual Eigen::Matrix<precision, 6, 6> GetStiffnessMatrix()
-		{
-			return stiffnesMatrix;
-		}
+template <>
+class LinearMaterial<2> : public Material {
+ public:
+  Eigen::Matrix<precision, 3, 3> stiffnesMatrix;
 
-	private:
+  LinearMaterial(double E, double nu) {
+    stiffnesMatrix << 1.0, (precision)(nu), .0, (precision)(nu), 1.0, .0, 0.0,
+        0.0, (precision)((1.0 - nu) / 2.);
 
-	};
+    stiffnesMatrix *= (precision)(E / (1.0 - pow(nu, 2.)));
+  }
 
-	template <>
-	class LinearMaterial<2> : public Material
-	{
-	public:
+  virtual Eigen::Matrix<precision, 3, 3> GetStiffnessMatrix() {
+    return stiffnesMatrix;
+  }
 
-		Eigen::Matrix<precision, 3, 3> stiffnesMatrix;
+ private:
+};
+}  // namespace vulkan_fem
 
-		LinearMaterial(double E, double nu)
-		{
-			stiffnesMatrix <<
-				1.0				, (precision)(nu)	, .0,
-				(precision)(nu)	, 1.0				, .0,
-				0.0				, 0.0				, (precision)((1.0 - nu) / 2.);
-
-			stiffnesMatrix *= (precision)(E / (1.0 - pow(nu, 2.)));
-		}
-
-		virtual Eigen::Matrix<precision, 3, 3> GetStiffnessMatrix()
-		{
-			return stiffnesMatrix;
-		}
-
-	private:
-
-	};
-}
-
-#endif // Material_h__
+#endif  // Material_h__
