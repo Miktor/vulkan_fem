@@ -72,11 +72,9 @@ class VulkanFem : public vulkan_fem::VulkanApplication {
     app->OnFocusChange(focus == GLFW_TRUE);
   }
 
-  static void scrollCallback(GLFWwindow* window, double xoffset,
-                             double yoffset) {}
+  static void scrollCallback(GLFWwindow*, double, double) {}
 
-  static void keyCallback(GLFWwindow* window, int key, int scancode, int action,
-                          int mods) {
+  static void keyCallback(GLFWwindow* window, int key, int, int action, int) {
     if (action != GLFW_PRESS) return;
 
     auto app = reinterpret_cast<VulkanFem*>(glfwGetWindowUserPointer(window));
@@ -419,9 +417,9 @@ class VulkanFem : public vulkan_fem::VulkanApplication {
       renderPassInfo.renderArea.offset = {0, 0};
       renderPassInfo.renderArea.extent = swapChainExtent;
 
-      VkClearValue clearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+      VkClearValue clearColor{{{0.1f, 0.1f, 0.1f, 1.0f}}};
       renderPassInfo.clearValueCount = 1;
-      renderPassInfo.pClearValues = &clearColor;
+      renderPassInfo.pClearValues = {&clearColor};
 
       vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo,
                            VK_SUBPASS_CONTENTS_INLINE);

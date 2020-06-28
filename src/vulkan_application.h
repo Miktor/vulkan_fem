@@ -15,7 +15,7 @@
 #include <vector>
 
 const std::vector<const char*> validationLayers = {
-    "VK_LAYER_LUNARG_standard_validation"};
+    "VK_LAYER_KHRONOS_validation"};
 
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -218,17 +218,23 @@ class VulkanApplication {
 
  private:
   void initWindow() {
+    std::cout << "start" << std::endl;
     glfwInit();
+    std::cout << "after init" << std::endl;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    std::cout << "window hint" << std::endl;
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+    std::cout << "window" << std::endl;
+
     glfwSetWindowUserPointer(window, this);
+    std::cout << "pointer" << std::endl;
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+    std::cout << "framebuffer" << std::endl;
   }
 
-  static void framebufferResizeCallback(GLFWwindow* window, int width,
-                                        int height) {
+  static void framebufferResizeCallback(GLFWwindow* window, int, int) {
     auto app =
         reinterpret_cast<VulkanApplication*>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
@@ -813,11 +819,9 @@ class VulkanApplication {
     return true;
   }
 
-  static VKAPI_ATTR VkBool32 VKAPI_CALL
-  debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                void* pUserData) {
+  static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+      VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT,
+      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void*) {
     std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
     return VK_FALSE;

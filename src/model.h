@@ -18,7 +18,7 @@ struct Constraint {
     UX = 1 << 0,
     UY = 1 << 1,
     UZ = 1 << 2,
-    s UXY = UX | UY,
+    UXY = UX | UY,
     UXZ = UX | UZ,
     UYZ = UY | UZ,
     UXYZ = UX | UY | UZ
@@ -71,7 +71,7 @@ class Model {
     const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
     const uint32_t element_count = element_type_->GetElementCount();
-    const uint32_t order = element_type_->GetOrder();
+    //const uint32_t order = element_type_->GetOrder();
 
     MatrixFixedCols<DIM> elem_transform(element_count, DIM);
     std::vector<precision> jacobian_determinants;

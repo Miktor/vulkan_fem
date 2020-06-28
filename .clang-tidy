@@ -1,0 +1,19 @@
+---
+# TODO: add checks 'modernize-use-override,misc-taxi-coroutine-fs-unsafe,hicpp-avoid-goto,hicpp-exception-baseclass'
+#     * modernize-use-override        - requires override on destructors (option added in recent versions of clang-tidy)
+#     * misc-taxi-coroutine-fs-unsafe - we have no alternative for some of the boost::filesystem calls
+#     * hicpp-avoid-goto              - triggers on Protobuf
+#     * hicpp-exception-baseclass     - gives false positives on throw function() and [](auto exception) { throw exception; }
+
+Checks:          '-*,bugprone-move-forwarding-reference,bugprone-use-after-move,performance-implicit-conversion-in-loop,performance-noexcept-move-constructor,misc-taxi-coroutine-unsafe,misc-taxi-dangling-config-ref,misc-taxi-mt-unsafe'
+WarningsAsErrors: '*'
+
+AnalyzeTemporaryDtors: false
+FormatStyle:     google
+User:            robot-taxi
+
+CheckOptions:
+#  TODO: uncomment in later version of clang-tidy
+#  - key:              modernize-use-override.IgnoreDestructors
+#    value:            1
+...

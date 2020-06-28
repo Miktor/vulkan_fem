@@ -16,10 +16,10 @@ class ModelFactory {
 
   static std::shared_ptr<Model<2>> CreateRectangle() {
     std::vector<Vertex3> vertices = {
-        {.0, .0},
-        {1.0, .0},
-        {.0, 1.0},
-        {1.0, 1.0},
+        {.0, .0, .0},
+        {1.0, .0, .0},
+        {.0, 1.0, .0},
+        {1.0, 1.0, .0},
     };
     std::vector<uint16_t> indices = {0, 1, 2, 1, 3, 2};
 
@@ -41,11 +41,11 @@ class ModelFactory {
   //	generateCylinder(r, h, vertices, indices);
 
   //	return std::shared_ptr<Model<3>>(new
-  //Model<3>(std::make_shared<Element2dTo3d>(std::make_shared<TriangleElement>()),
+  // Model<3>(std::make_shared<Element2dTo3d>(std::make_shared<TriangleElement>()),
   //									  vertices,
   //									  indices,
-  //									  0.2e12, 0.3)); // 200GPa, 0.3 Young,
-  //Poisson's for steel
+  //									  0.2e12, 0.3)); //
+  //200GPa, 0.3 Young, Poisson's for steel
   //}
 
  private:
@@ -55,7 +55,7 @@ class ModelFactory {
     static const uint32_t SIDES = 5;
     static const uint32_t RINGS = 6;
 
-    const uint32_t faces = SIDES * RINGS;
+    // const uint32_t faces = SIDES * RINGS;
     const uint32_t nVerts = (SIDES + 1) * RINGS + 2 * (SIDES + 1);
 
     vertices.resize(nVerts);
@@ -73,7 +73,7 @@ class ModelFactory {
       const precision y = -half_h + static_cast<precision>(ring) * dy;
 
       // Iterate over slices (segments in a ring)
-      for (int slice = 0; slice < SIDES + 1; ++slice) {
+      for (uint32_t slice = 0; slice < SIDES + 1; ++slice) {
         const precision theta = static_cast<precision>(slice) * dTheta;
         const precision cosTheta = std::cos(theta);
         const precision sinTheta = std::sin(theta);

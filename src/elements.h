@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 
 namespace vulkan_fem {
+
 // space dimention
 template <uint32_t DIM = 3>
 class Element {
@@ -20,6 +21,7 @@ class Element {
  protected:
   Element(uint32_t element_count, uint32_t order)
       : element_count_(element_count), order_(order) {}
+  virtual ~Element() {}
 
  private:
   uint32_t element_count_;
@@ -64,7 +66,7 @@ class TetrahedronElement : public ScalarElement<3> {
   }
 
   virtual MatrixFixedRows<3, precision> CalcDShape(
-      const std::vector<precision>& ip) override {
+      const std::vector<precision>&) override {
     MatrixFixedRows<3, precision> dshape = Eigen::Matrix<precision, 3, 4>();
     // 1st row
     // dN(i) / dXi
@@ -105,7 +107,7 @@ class TriangleElement : public ScalarElement<2> {
   }
 
   virtual MatrixFixedRows<2, precision> CalcDShape(
-      const std::vector<precision>& ip) override {
+      const std::vector<precision>&) override {
     MatrixFixedRows<2, precision> dshape = Eigen::Matrix<precision, 2, 3>();
     // 1st row
     // dN(i) / dXi
