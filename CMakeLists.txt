@@ -13,10 +13,11 @@ IF(MSVC)
     add_definitions(-DNOMINMAX)
 ENDIF()
 
-find_package(vulkan REQUIRED)
-find_package(glm REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(GLM REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(volk CONFIG REQUIRED)
 
 include_directories(Vulkan::Vulkan)
 include_directories(${GLM_INCLUDE_DIR})
@@ -24,10 +25,8 @@ include_directories(${GLM_INCLUDE_DIR})
 include(CTest)
 enable_testing()
 
-add_executable(vulkan_fem src/main.cpp)
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/src" SOURCES)
+add_executable(vulkan_fem ${SOURCES})
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     target_compile_definitions(vulkan_fem PRIVATE VK_USE_PLATFORM_WIN32_KHR)
@@ -35,6 +34,9 @@ ELSE()
     target_compile_definitions(vulkan_fem PRIVATE VK_USE_PLATFORM_MACOS_MVK)
 ENDIF()
 
-target_link_libraries(vulkan_fem PRIVATE Vulkan::Vulkan)
+
+target_link_libraries(vulkan_fem PRIVATE volk::volk_headers)
+target_link_libraries(vulkan_fem PRIVATE volk::volk)
+
 target_link_libraries(vulkan_fem PRIVATE glfw)
 target_link_libraries(vulkan_fem PRIVATE Eigen3::Eigen)

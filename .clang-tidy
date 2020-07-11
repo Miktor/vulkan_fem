@@ -1,0 +1,5 @@
+Checks:          '-*,bugprone-move-forwarding-reference,bugprone-use-after-move,performance-implicit-conversion-in-loop,performance-noexcept-move-constructor'
+WarningsAsErrors: '*'
+
+AnalyzeTemporaryDtors: false
+FormatStyle:     google

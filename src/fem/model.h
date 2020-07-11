@@ -18,7 +18,7 @@ struct Constraint {
     UX = 1 << 0,
     UY = 1 << 1,
     UZ = 1 << 2,
-    s UXY = UX | UY,
+    UXY = UX | UY,
     UXZ = UX | UZ,
     UYZ = UY | UZ,
     UXYZ = UX | UY | UZ

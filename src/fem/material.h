@@ -24,14 +24,11 @@ class LinearMaterial<3> : public Material {
 
     const precision c1 = (precision)(lambda + 2. * mu);
 
-    stiffnesMatrix << c1, lambda, lambda, .0, .0, .0, lambda, c1, lambda, .0,
-        .0, .0, lambda, lambda, c1, .0, .0, .0, .0, .0, .0, mu, .0, .0, .0, .0,
-        .0, .0, mu, .0, .0, .0, .0, .0, .0, mu;
+    stiffnesMatrix << c1, lambda, lambda, .0, .0, .0, lambda, c1, lambda, .0, .0, .0, lambda, lambda, c1, .0,
+        .0, .0, .0, .0, .0, mu, .0, .0, .0, .0, .0, .0, mu, .0, .0, .0, .0, .0, .0, mu;
   }
 
-  virtual Eigen::Matrix<precision, 6, 6> GetStiffnessMatrix() {
-    return stiffnesMatrix;
-  }
+  virtual Eigen::Matrix<precision, 6, 6> GetStiffnessMatrix() { return stiffnesMatrix; }
 
  private:
 };
@@ -42,15 +39,13 @@ class LinearMaterial<2> : public Material {
   Eigen::Matrix<precision, 3, 3> stiffnesMatrix;
 
   LinearMaterial(double E, double nu) {
-    stiffnesMatrix << 1.0, (precision)(nu), .0, (precision)(nu), 1.0, .0, 0.0,
-        0.0, (precision)((1.0 - nu) / 2.);
+    stiffnesMatrix << 1.0, (precision)(nu), .0, (precision)(nu), 1.0, .0, 0.0, 0.0,
+        (precision)((1.0 - nu) / 2.);
 
     stiffnesMatrix *= (precision)(E / (1.0 - pow(nu, 2.)));
   }
 
-  virtual Eigen::Matrix<precision, 3, 3> GetStiffnessMatrix() {
-    return stiffnesMatrix;
-  }
+  virtual Eigen::Matrix<precision, 3, 3> GetStiffnessMatrix() { return stiffnesMatrix; }
 
  private:
 };
