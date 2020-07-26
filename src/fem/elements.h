@@ -1,5 +1,4 @@
-#ifndef elements_h__
-#define elements_h__
+#pragma once
 
 #include "fem.h"
 
@@ -136,5 +135,3 @@ class Element2dTo3d : public ScalarElement<3> {
 };
 
 }  // namespace vulkan_fem
-
-#endif  // elements_h__

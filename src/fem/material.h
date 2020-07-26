@@ -1,11 +1,11 @@
-#ifndef Material_h__
-#define Material_h__
+#pragma once
 
 #include "fem.h"
 
 #include <Eigen/Dense>
 
 namespace vulkan_fem {
+
 class Material {
  public:
 };
@@ -49,6 +49,5 @@ class LinearMaterial<2> : public Material {
 
  private:
 };
-}  // namespace vulkan_fem
 
-#endif  // Material_h__
+}  // namespace vulkan_fem

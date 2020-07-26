@@ -1,5 +1,4 @@
-#ifndef fem_h__
-#define fem_h__
+#pragma once
 
 #include <stdint.h>
 
@@ -24,5 +23,3 @@ template <size_t DIM = 3, typename Scalar = precision>
 using MatrixStrain = Eigen::Matrix<Scalar, DIM, DIM>;
 
 }  // namespace vulkan_fem
-
-#endif  // fem_h__

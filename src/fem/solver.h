@@ -1,6 +1,8 @@
 #ifndef solver_h__
 #define solver_h__
 
+#include <iostream>
+
 #include "fem.h"
 
 namespace vulkan_fem {
