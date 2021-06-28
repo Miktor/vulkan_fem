@@ -1,12 +1,10 @@
 #ifndef fem_h__
 #define fem_h__
 
-#include <stdint.h>
-
-#include <vector>
-
 #include "Eigen/Dense"
 #include "Eigen/Sparse"
+#include <stdint.h>
+#include <vector>
 
 namespace vulkan_fem {
 using precision = float;

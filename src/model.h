@@ -14,15 +14,7 @@ struct Vertex3 {
 };
 
 struct Constraint {
-  enum Type {
-    UX = 1 << 0,
-    UY = 1 << 1,
-    UZ = 1 << 2,
-    UXY = UX | UY,
-    UXZ = UX | UZ,
-    UYZ = UY | UZ,
-    UXYZ = UX | UY | UZ
-  };
+  enum Type { UX = 1 << 0, UY = 1 << 1, UZ = 1 << 2, UXY = UX | UY, UXZ = UX | UZ, UYZ = UY | UZ, UXYZ = UX | UY | UZ };
 
   uint32_t node;
   Type type;
@@ -46,11 +38,8 @@ class Model {
   typedef Eigen::SparseMatrix<precision> ElementMatrix;
   typedef Eigen::Matrix<precision, 1, Eigen::Dynamic> Loads;
 
-  Model(std::shared_ptr<ScalarElement<DIM>> element_type,
-        const std::vector<Vertex3> &vertices,
-        const std::vector<uint16_t> &indices,
-        const std::vector<Constraint> &constraints,
-        const std::vector<Load<DIM>> &loads, double E, double mu)
+  Model(std::shared_ptr<ScalarElement<DIM>> element_type, const std::vector<Vertex3> &vertices, const std::vector<uint16_t> &indices,
+        const std::vector<Constraint> &constraints, const std::vector<Load<DIM>> &loads, double E, double mu)
       : element_type_(element_type),
         material_(E, mu),
         elements_(vertices),
@@ -65,13 +54,12 @@ class Model {
   Eigen::VectorXf GetLoads() { return loads_; }
 
   ElementMatrix BuildGlobalStiffnesMatrix() {
-    ElementMatrix global_stiffness_matrix(elements_.size() * DIM,
-                                          elements_.size() * DIM);
+    ElementMatrix global_stiffness_matrix(elements_.size() * DIM, elements_.size() * DIM);
 
     const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
     const uint32_t element_count = element_type_->GetElementCount();
-    //const uint32_t order = element_type_->GetOrder();
+    // const uint32_t order = element_type_->GetOrder();
 
     MatrixFixedCols<DIM> elem_transform(element_count, DIM);
     std::vector<precision> jacobian_determinants;
@@ -82,30 +70,24 @@ class Model {
 
     for (uint32_t index = 0; index < element_inidices_.size();) {
       // put all vertex transforms into matrix
-      for (uint16_t sub_index = 0; sub_index < element_count &&
-                                   index + sub_index < element_inidices_.size();
-           ++sub_index) {
+      for (uint16_t sub_index = 0; sub_index < element_count && index + sub_index < element_inidices_.size(); ++sub_index) {
         const uint16_t sub_element_index = element_inidices_[index + sub_index];
         const Vertex3 &sub_element_vertex = elements_[sub_element_index];
 
         if (DIM == 2)
-          elem_transform.row(sub_index) << sub_element_vertex.x,
-              sub_element_vertex.y;
+          elem_transform.row(sub_index) << sub_element_vertex.x, sub_element_vertex.y;
         else if (DIM == 3)
-          elem_transform.row(sub_index) << sub_element_vertex.x,
-              sub_element_vertex.y, sub_element_vertex.z;
+          elem_transform.row(sub_index) << sub_element_vertex.x, sub_element_vertex.y, sub_element_vertex.z;
       }
 
       jacobian_determinants.clear();
-      auto elem_matrix = calcElementMatrix(element_type_, elem_transform,
-                                           jacobian_determinants);
+      auto elem_matrix = calcElementMatrix(element_type_, elem_transform, jacobian_determinants);
       auto b_matrix = makeStrainMatrix(element_count, elem_matrix);
 
       auto d_matrix = material_.GetStiffnessMatrix();
 
       Eigen::Matrix<precision, 6, 6> elementStiffnesMatrix =
-          b_matrix.transpose() * d_matrix * b_matrix *
-          jacobian_determinants.front() / 2.;
+          b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
 
       for (uint32_t i = 0; i < element_count; ++i) {
         for (uint32_t j = 0; j < element_count; ++j) {
@@ -113,20 +95,12 @@ class Model {
           const uint16_t global_index_j = element_inidices_[index + j];
 
           // x coords
-          triplets.push_back(
-              T(DIM * global_index_i + 0, DIM * global_index_j + 0,
-                elementStiffnesMatrix(DIM * i + 0, DIM * j + 0)));
-          triplets.push_back(
-              T(DIM * global_index_i + 0, DIM * global_index_j + 1,
-                elementStiffnesMatrix(DIM * i + 0, DIM * j + 1)));
+          triplets.push_back(T(DIM * global_index_i + 0, DIM * global_index_j + 0, elementStiffnesMatrix(DIM * i + 0, DIM * j + 0)));
+          triplets.push_back(T(DIM * global_index_i + 0, DIM * global_index_j + 1, elementStiffnesMatrix(DIM * i + 0, DIM * j + 1)));
 
           // y coords
-          triplets.push_back(
-              T(DIM * global_index_i + 1, 2 * global_index_j + 0,
-                elementStiffnesMatrix(DIM * i + 1, DIM * j + 0)));
-          triplets.push_back(
-              T(DIM * global_index_i + 1, 2 * global_index_j + 1,
-                elementStiffnesMatrix(DIM * i + 1, DIM * j + 1)));
+          triplets.push_back(T(DIM * global_index_i + 1, 2 * global_index_j + 0, elementStiffnesMatrix(DIM * i + 1, DIM * j + 0)));
+          triplets.push_back(T(DIM * global_index_i + 1, 2 * global_index_j + 1, elementStiffnesMatrix(DIM * i + 1, DIM * j + 1)));
         }
       }
 
@@ -143,22 +117,18 @@ class Model {
     for (const auto contraint : constraints_) {
       switch (DIM) {
         case 3:
-          if (contraint.type & Constraint::UZ)
-            indicesToConstraint.push_back(DIM * contraint.node + 2);
+          if (contraint.type & Constraint::UZ) indicesToConstraint.push_back(DIM * contraint.node + 2);
         case 2:
-          if (contraint.type & Constraint::UY)
-            indicesToConstraint.push_back(DIM * contraint.node + 1);
+          if (contraint.type & Constraint::UY) indicesToConstraint.push_back(DIM * contraint.node + 1);
         case 1:
-          if (contraint.type & Constraint::UX)
-            indicesToConstraint.push_back(DIM * contraint.node + 0);
+          if (contraint.type & Constraint::UX) indicesToConstraint.push_back(DIM * contraint.node + 0);
         default:
           break;
       }
     }
 
     for (int k = 0; k < global_stiffnes_matrix.outerSize(); ++k) {
-      for (ElementMatrix::InnerIterator it(global_stiffnes_matrix, k); it;
-           ++it) {
+      for (ElementMatrix::InnerIterator it(global_stiffnes_matrix, k); it; ++it) {
         for (auto index : indicesToConstraint) {
           if (it.row() == index || it.col() == index) {
             it.valueRef() = it.row() == it.col() ? 1.0f : 0.0f;
@@ -172,8 +142,7 @@ class Model {
   Loads buildLoadsVector(const std::vector<Load<DIM>> &loads) {
     Loads load_vector = Loads::Zero(elements_.size() * DIM);
     for (auto load : loads) {
-      for (uint32_t i = 0; i < DIM; ++i)
-        load_vector[load.node * DIM + i] = load.forces[i];
+      for (uint32_t i = 0; i < DIM; ++i) load_vector[load.node * DIM + i] = load.forces[i];
     }
     return load_vector;
   }
@@ -182,14 +151,10 @@ class Model {
   // [ Ni 0
   // [ 0  Ni
   // [ Ni Ni
-  MatrixFixedRows<DIM> calcElementMatrix(
-      std::shared_ptr<ScalarElement<DIM>> element_type,
-      const MatrixFixedCols<DIM> &elem_transform,
-      std::vector<precision> &jacobian_determinants) {
-    MatrixFixedRows<DIM> elementMatrix =
-        MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
-    const std::vector<std::vector<precision>> &integration_points{
-        {0.25, 0.25, 0.25}};
+  MatrixFixedRows<DIM> calcElementMatrix(std::shared_ptr<ScalarElement<DIM>> element_type, const MatrixFixedCols<DIM> &elem_transform,
+                                         std::vector<precision> &jacobian_determinants) {
+    MatrixFixedRows<DIM> elementMatrix = MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
+    const std::vector<std::vector<precision>> &integration_points{{0.25, 0.25, 0.25}};
     jacobian_determinants.reserve(integration_points.size());
 
     for (const auto &ip : integration_points) {
@@ -213,8 +178,7 @@ class Model {
   // [ Nix 0
   // [ 0   Niy
   // [ Niy Nix
-  Eigen::Matrix<precision, 3, 6> makeStrainMatrix(
-      const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
+  Eigen::Matrix<precision, 3, 6> makeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
     Eigen::Matrix<precision, 3, 6> strain_matrix;
     for (int i = 0; i < element_count; ++i) {
       strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);  // Nix

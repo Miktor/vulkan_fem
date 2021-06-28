@@ -4,9 +4,8 @@
 #include "fem.h"
 
 #define _USE_MATH_DEFINES
-#include <math.h>
-
 #include "model.h"
+#include <math.h>
 
 namespace vulkan_fem {
 
@@ -23,13 +22,11 @@ class ModelFactory {
     };
     std::vector<uint16_t> indices = {0, 1, 2, 1, 3, 2};
 
-    std::vector<Constraint> constraints = {{0, Constraint::UXY},
-                                           {1, Constraint::UY}};
+    std::vector<Constraint> constraints = {{0, Constraint::UXY}, {1, Constraint::UY}};
     std::vector<Load<2>> loads = {{2, {0, 1.}}, {3, {0, 1.}}};
 
-    return std::make_shared<Model<2>>(
-        std::make_shared<TriangleElement>(), vertices, indices, constraints,
-        loads, 0.2e4, 0.3);  // 200GPa, 0.3 Young, Poisson's for steel
+    return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(), vertices, indices, constraints, loads, 0.2e4,
+                                      0.3);  // 200GPa, 0.3 Young, Poisson's for steel
   }
 
   // static std::shared_ptr<Model<3>> CreateCylinderModel(const precision r,
@@ -44,14 +41,13 @@ class ModelFactory {
   // Model<3>(std::make_shared<Element2dTo3d>(std::make_shared<TriangleElement>()),
   //									  vertices,
   //									  indices,
-  //									  0.2e12, 0.3)); //
-  //200GPa, 0.3 Young, Poisson's for steel
+  //									  0.2e12,
+  // 0.3));
+  //// 200GPa, 0.3 Young, Poisson's for steel
   //}
 
  private:
-  static void generateCylinder(const precision r, const precision h,
-                               std::vector<Vertex3>& vertices,
-                               std::vector<uint16_t>& indices) {
+  static void generateCylinder(const precision r, const precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     static const uint32_t SIDES = 5;
     static const uint32_t RINGS = 6;
 
@@ -102,17 +98,12 @@ class ModelFactory {
       }
     }
 
-    generateEndCapVertexData(SIDES, r, half_h, index, elIndex, vertices,
-                             indices);
-    generateEndCapVertexData(SIDES, r, -half_h, index, elIndex, vertices,
-                             indices);
+    generateEndCapVertexData(SIDES, r, half_h, index, elIndex, vertices, indices);
+    generateEndCapVertexData(SIDES, r, -half_h, index, elIndex, vertices, indices);
   }
 
-  static void generateEndCapVertexData(const uint32_t sides, const precision r,
-                                       const precision y, uint16_t& index,
-                                       uint16_t& elIndex,
-                                       std::vector<Vertex3>& vertices,
-                                       std::vector<uint16_t>& indices) {
+  static void generateEndCapVertexData(const uint32_t sides, const precision r, const precision y, uint16_t &index, uint16_t &elIndex,
+                                       std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     // Make a note of the vertex index for the center of the end cap
     const uint16_t endCapStartIndex = index;
 
@@ -146,8 +137,7 @@ class ModelFactory {
   }
 };
 
-const precision ModelFactory::TWO_PI =
-    static_cast<precision>(2.) * static_cast<precision>(M_PI);
+const precision ModelFactory::TWO_PI = static_cast<precision>(2.) * static_cast<precision>(M_PI);
 }  // namespace vulkan_fem
 
 #endif  // model_factory_h__

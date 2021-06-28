@@ -1,2 +1,22 @@
-BasedOnStyle: google
+BasedOnStyle: Google
+
+ColumnLimit: 140
 DerivePointerAlignment: false
+PointerAlignment: Right
+
+IncludeBlocks: Merge
+IncludeCategories:
+  - Regex: '^\"'
+    Priority: 1500
+  - Regex: "^<Eigen/"
+    Priority: 2900
+  - Regex: "^<glm/"
+    Priority: 2900
+  - Regex: "^<GLFW/*"
+    Priority: 3000
+  - Regex: "^<.*/.*"
+    Priority: 4000
+  - Regex: "^<[^/]*>"
+    Priority: 5000
+
+CommentPragmas: "(@copydoc)"
