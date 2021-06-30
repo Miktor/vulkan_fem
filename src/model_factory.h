@@ -1,17 +1,16 @@
-#ifndef model_factory_h__
-#define model_factory_h__
+#pragma once
 
 #include "fem.h"
 
-#define _USE_MATH_DEFINES
+#define USE_MATH_DEFINES
 #include "model.h"
-#include <math.h>
+#include <cmath>
 
 namespace vulkan_fem {
 
 class ModelFactory {
  public:
-  static const precision TWO_PI;
+  static constexpr Precision kTwoPi = static_cast<Precision>(2.) * static_cast<Precision>(M_PI);
 
   static std::shared_ptr<Model<2>> CreateRectangle() {
     std::vector<Vertex3> vertices = {
@@ -22,7 +21,7 @@ class ModelFactory {
     };
     std::vector<uint16_t> indices = {0, 1, 2, 1, 3, 2};
 
-    std::vector<Constraint> constraints = {{0, Constraint::UXY}, {1, Constraint::UY}};
+    std::vector<Constraint> constraints = {{0, Constraint::kUxy}, {1, Constraint::kUy}};
     std::vector<Load<2>> loads = {{2, {0, 1.}}, {3, {0, 1.}}};
 
     return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(), vertices, indices, constraints, loads, 0.2e4,
@@ -47,75 +46,75 @@ class ModelFactory {
   //}
 
  private:
-  static void generateCylinder(const precision r, const precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
-    static const uint32_t SIDES = 5;
-    static const uint32_t RINGS = 6;
+  void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
+    static const uint32_t kSides = 5;
+    static const uint32_t kRings = 6;
 
     // const uint32_t faces = SIDES * RINGS;
-    const uint32_t nVerts = (SIDES + 1) * RINGS + 2 * (SIDES + 1);
+    const uint32_t n_verts = (kSides + 1) * kRings + 2 * (kSides + 1);
 
-    vertices.resize(nVerts);
-    indices.resize(6 * SIDES * (RINGS - 1) + 2 * 3 * SIDES);
+    vertices.resize(n_verts);
+    indices.resize(6 * kSides * (kRings - 1) + 2 * 3 * kSides);
 
     // The side of the cylinder
-    const precision dTheta = TWO_PI / static_cast<precision>(SIDES);
-    const precision dy = h / static_cast<precision>(RINGS - 1);
-    const precision half_h = h / precision(2);
+    Precision d_theta = kTwoPi / static_cast<Precision>(kSides);
+    Precision dy = h / static_cast<Precision>(kRings - 1);
+    Precision half_h = h / Precision(2);
 
     // Iterate over heights (rings)
     uint16_t index = 0;
 
-    for (uint32_t ring = 0; ring < RINGS; ++ring) {
-      const precision y = -half_h + static_cast<precision>(ring) * dy;
+    for (uint32_t ring = 0; ring < kRings; ++ring) {
+      Precision y = -half_h + static_cast<Precision>(ring) * dy;
 
       // Iterate over slices (segments in a ring)
-      for (uint32_t slice = 0; slice < SIDES + 1; ++slice) {
-        const precision theta = static_cast<precision>(slice) * dTheta;
-        const precision cosTheta = std::cos(theta);
-        const precision sinTheta = std::sin(theta);
+      for (uint32_t slice = 0; slice < kSides + 1; ++slice) {
+        Precision theta = static_cast<Precision>(slice) * d_theta;
+        Precision cos_theta = std::cos(theta);
+        Precision sin_theta = std::sin(theta);
 
-        vertices[index] = {r * cosTheta, y, r * sinTheta};
+        vertices[index] = {r * cos_theta, y, r * sin_theta};
 
         ++index;
       }
     }
 
-    uint16_t elIndex = 0;
-    for (uint32_t i = 0; i < RINGS - 1; ++i) {
-      const uint16_t ringStartIndex = i * (SIDES + 1);
-      const uint32_t nextRingStartIndex = (i + 1) * (SIDES + 1);
+    uint16_t el_index = 0;
+    for (uint32_t i = 0; i < kRings - 1; ++i) {
+      const uint16_t ring_start_index = i * (kSides + 1);
+      const uint32_t next_ring_start_index = (i + 1) * (kSides + 1);
 
-      for (uint32_t j = 0; j < SIDES; ++j) {
+      for (uint32_t j = 0; j < kSides; ++j) {
         // Split the quad into two triangles
-        indices[elIndex] = ringStartIndex + j;
-        indices[elIndex + 1] = ringStartIndex + j + 1;
-        indices[elIndex + 2] = nextRingStartIndex + j;
-        indices[elIndex + 3] = nextRingStartIndex + j;
-        indices[elIndex + 4] = ringStartIndex + j + 1;
-        indices[elIndex + 5] = nextRingStartIndex + j + 1;
+        indices[el_index] = ring_start_index + j;
+        indices[el_index + 1] = ring_start_index + j + 1;
+        indices[el_index + 2] = next_ring_start_index + j;
+        indices[el_index + 3] = next_ring_start_index + j;
+        indices[el_index + 4] = ring_start_index + j + 1;
+        indices[el_index + 5] = next_ring_start_index + j + 1;
 
-        elIndex += 6;
+        el_index += 6;
       }
     }
 
-    generateEndCapVertexData(SIDES, r, half_h, index, elIndex, vertices, indices);
-    generateEndCapVertexData(SIDES, r, -half_h, index, elIndex, vertices, indices);
+    GenerateEndCapVertexData(kSides, r, half_h, index, el_index, vertices, indices);
+    GenerateEndCapVertexData(kSides, r, -half_h, index, el_index, vertices, indices);
   }
 
-  static void generateEndCapVertexData(const uint32_t sides, const precision r, const precision y, uint16_t &index, uint16_t &elIndex,
-                                       std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
+  void GenerateEndCapVertexData(const uint32_t sides, Precision r, Precision y, uint16_t &index, uint16_t &el_index,
+                                std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     // Make a note of the vertex index for the center of the end cap
-    const uint16_t endCapStartIndex = index;
+    const uint16_t end_cap_start_index = index;
 
     vertices[index++] = {.0, y, .0};
 
-    const precision dTheta{TWO_PI / static_cast<precision>(sides)};
+    Precision d_theta{kTwoPi / static_cast<Precision>(sides)};
     for (uint32_t slice = 0; slice < sides; ++slice) {
-      const precision theta = static_cast<precision>(slice) * dTheta;
-      const precision cosTheta = std::cos(theta);
-      const precision sinTheta = std::sin(theta);
+      Precision theta = static_cast<Precision>(slice) * d_theta;
+      Precision cos_theta = std::cos(theta);
+      Precision sin_theta = std::sin(theta);
 
-      vertices[index] = {r * cosTheta, y, r * sinTheta};
+      vertices[index] = {r * cos_theta, y, r * sin_theta};
 
       ++index;
     }
@@ -123,21 +122,18 @@ class ModelFactory {
     for (uint32_t i = 0; i < sides; ++i) {
       // Use center point and i+1, and i+2 vertices to create triangles
       if (i != sides - 1) {
-        indices[elIndex] = endCapStartIndex;
-        indices[elIndex + 1] = endCapStartIndex + i + 1;
-        indices[elIndex + 2] = endCapStartIndex + i + 2;
+        indices[el_index] = end_cap_start_index;
+        indices[el_index + 1] = end_cap_start_index + i + 1;
+        indices[el_index + 2] = end_cap_start_index + i + 2;
       } else {
-        indices[elIndex] = endCapStartIndex;
-        indices[elIndex + 1] = endCapStartIndex + i + 1;
-        indices[elIndex + 2] = endCapStartIndex + 1;
+        indices[el_index] = end_cap_start_index;
+        indices[el_index + 1] = end_cap_start_index + i + 1;
+        indices[el_index + 2] = end_cap_start_index + 1;
       }
 
-      elIndex += 3;
+      el_index += 3;
     }
   }
 };
 
-const precision ModelFactory::TWO_PI = static_cast<precision>(2.) * static_cast<precision>(M_PI);
 }  // namespace vulkan_fem
-
-#endif  // model_factory_h__

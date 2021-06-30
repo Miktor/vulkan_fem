@@ -8,13 +8,11 @@ BUILD_DIR =./build
 clang-tidy: 
 	@./tools/run-clang-tidy.py -p "$(BUILD_DIR)" \
 		-clang-tidy-binary $(CLANG_TIDY_BINARY) \
-		-j$(NPROCS) \
-		-header-filter=./src/*
+		-j$(NPROCS)
 
 .PHONY: clang-tidy-fix
 clang-tidy-fix: 
 	@./tools/run-clang-tidy.py -p "$(BUILD_DIR)" \
 		-clang-tidy-binary $(CLANG_TIDY_BINARY) \
-		-clang-apply-replacements-binary $(CLANG_APPLY_REPLACEMENTS_BINARY)
-		-j$(NPROCS) -fix \
-		-header-filter=.*
+		-clang-apply-replacements-binary $(CLANG_APPLY_REPLACEMENTS_BINARY) \
+		-j$(NPROCS) -fix -format

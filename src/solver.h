@@ -1,5 +1,4 @@
-#ifndef solver_h__
-#define solver_h__
+#pragma once
 
 #include "fem.h"
 #include <iostream>
@@ -24,4 +23,3 @@ class Solver {
 
 }  // namespace vulkan_fem
 
-#endif  // solver_h__
