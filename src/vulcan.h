@@ -1,10 +1,15 @@
 #pragma once
 
+#include <cstdint>
+#include <iosfwd>
 #include <optional>
+#include <stddef.h>
 #include <vector>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <vulkan/vk_platform.h>
+#include <vulkan/vulkan_core.h>
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphics_family_;

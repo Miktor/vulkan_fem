@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -10,6 +9,8 @@
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <string>
+
 
 constexpr uint32_t kWidth = 800;
 constexpr uint32_t kHeight = 600;
