@@ -3,7 +3,10 @@ project(vulkan_fem VERSION 0.1.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# add_compile_options(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED on)
+set(CMAKE_CXX_EXTENSIONS off)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     add_definitions(-DWIN32_LEAN_AND_MEAN)

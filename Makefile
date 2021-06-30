@@ -1,5 +1,5 @@
-CLANG_TIDY_BINARY = /usr/local/opt/llvm@11/bin/clang-tidy
-CLANG_APPLY_REPLACEMENTS_BINARY = /usr/local/opt/llvm@11/bin/clang-apply-replacements
+CLANG_TIDY_BINARY = /usr/local/opt/llvm/bin/clang-tidy
+CLANG_APPLY_REPLACEMENTS_BINARY = /usr/local/opt/llvm/bin/clang-apply-replacements
 NPROCS = 4
 BUILD_DIR =./build
 

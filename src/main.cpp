@@ -1,14 +1,5 @@
 #define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
-
-#include "model.h"
-#include "model_factory.h"
-#include "solver.h"
-#include "vulcan.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -20,30 +11,39 @@
 #include <stdexcept>
 #include <vector>
 
-struct Vertex {
-  glm::vec3 pos;
-  static VkVertexInputBindingDescription getBindingDescription() {
-    VkVertexInputBindingDescription binding_description = {};
-    binding_description.binding = 0;
-    binding_description.stride = sizeof(Vertex);
-    binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    return binding_description;
-  }
+#include "model.h"
+#include "model_factory.h"
+#include "solver.h"
+#include "vulcan.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-  static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
-    std::array<VkVertexInputAttributeDescription, 1> attribute_descriptions = {};
-    attribute_descriptions[0].binding = 0;
-    attribute_descriptions[0].location = 0;
-    attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attribute_descriptions[0].offset = offsetof(Vertex, pos);
-    return attribute_descriptions;
-  }
-};
-struct UniformBufferObject {
-  glm::mat4 model;
-  glm::mat4 view;
-  glm::mat4 proj;
-};
+// struct Vertex {
+//   glm::vec3 pos;
+//   static VkVertexInputBindingDescription getBindingDescription() {
+//     VkVertexInputBindingDescription binding_description = {};
+//     binding_description.binding = 0;
+//     binding_description.stride = sizeof(Vertex);
+//     binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+//     return binding_description;
+//   }
+
+//   static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions() {
+//     std::array<VkVertexInputAttributeDescription, 1> attribute_descriptions = {};
+//     attribute_descriptions[0].binding = 0;
+//     attribute_descriptions[0].location = 0;
+//     attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+//     attribute_descriptions[0].offset = offsetof(Vertex, pos);
+//     return attribute_descriptions;
+//   }
+// };
+// struct UniformBufferObject {
+//   glm::mat4 model;
+//   glm::mat4 view;
+//   glm::mat4 proj;
+// };
 
 // // class VulkanFem : public vkb::VulkanApplication {
 // //  public:
