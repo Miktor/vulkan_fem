@@ -19,7 +19,7 @@ struct SwapChainSupportDetails {
   std::vector<VkPresentModeKHR> presentModes;
 };
 
-class HelloTriangleApplication {
+class Application {
  public:
   void run();
 

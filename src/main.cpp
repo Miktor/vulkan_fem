@@ -103,7 +103,7 @@
 // // }
 
 int main(const int /*argc*/, const char ** /*argv[]*/) {
-  HelloTriangleApplication app;
+  Application app;
 
   try {
     app.run();
