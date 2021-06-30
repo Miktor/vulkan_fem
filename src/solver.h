@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fem.h"
+#include "model.h"
 #include <iostream>
 
 namespace vulkan_fem {

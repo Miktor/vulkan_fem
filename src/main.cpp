@@ -1,5 +1,4 @@
-#define GLM_FORCE_RADIANS
-#define GLM_ENABLE_EXPERIMENTAL
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -11,14 +10,17 @@
 #include <stdexcept>
 #include <vector>
 
-#include "model.h"
-#include "model_factory.h"
-#include "solver.h"
-#include "vulcan.h"
+#define GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+
+#include "model.h"
+#include "model_factory.h"
+#include "solver.h"
+#include "vulcan.h"
 
 // struct Vertex {
 //   glm::vec3 pos;
