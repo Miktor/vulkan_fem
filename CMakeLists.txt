@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 project(vulkan_fem VERSION 0.1.0)
 
+enable_language(CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # add_compile_options(-std=c++17)
@@ -15,6 +16,8 @@ ELSEIF(APPLE)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_MVK")
 ENDIF()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/Library/Developer/CommandLineTools/usr/include/c++/v1")
+
 IF(MSVC)
     add_definitions(-DNOMINMAX)
 ENDIF()
@@ -25,7 +28,6 @@ find_package(glfw3 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(spdlog REQUIRED)
 
-include_directories(Vulkan::Vulkan)
 include_directories(${GLM_INCLUDE_DIR})
 
 file(GLOB VULKAN_FEM_SRC
@@ -47,6 +49,8 @@ ELSE()
     target_compile_definitions(vulkan_fem PRIVATE VK_USE_PLATFORM_MACOS_MVK)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_MACOS_MVK)
 ENDIF()
+
+target_include_directories(vulkan_fem PRIVATE Vulkan::Vulkan)
 
 target_link_libraries(vulkan_fem PRIVATE Vulkan::Vulkan)
 target_link_libraries(vulkan_fem PRIVATE glfw)
