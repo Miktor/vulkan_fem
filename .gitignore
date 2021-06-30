@@ -7,13 +7,15 @@
 *.userosscache
 *.sln.docstates
 *.vscode/
-.cache/
 compile_commands.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
 # Build results
+.cache/
+clangd/
+.clangd/
 build/
 [Dd]ebug/
 [Dd]ebugPublic/
