@@ -77,9 +77,6 @@ std::vector<VkVertexInputAttributeDescription> Vertex::GetAttributeDescriptions(
   return attribute_descriptions;
 }
 
-const std::vector<Vertex> kVertices = {{{-0.5F, -0.5F}}, {{0.5F, -0.5F}}, {{0.5F, 0.5F}}, {{-0.5F, 0.5F}}};
-const std::vector<uint16_t> kIndices = {0, 1, 2, 2, 3, 0};
-
 void Application::Run() {
   InitWindow();
   InitVulkan();
@@ -112,8 +109,7 @@ void Application::InitVulkan() {
   CreateGraphicsPipeline();
   CreateFramebuffers();
   CreateCommandPool();
-  CreateVertexBuffer();
-  CreateIndexBuffer();
+  CrateBuffers();
   CreateCommandBuffers();
   CreateSyncObjects();
 }
@@ -147,11 +143,6 @@ void Application::CleanupSwapChain() {
 
 void Application::Cleanup() {
   CleanupSwapChain();
-
-  vkDestroyBuffer(device_, index_buffer_, nullptr);
-  vkFreeMemory(device_, index_buffer_memory_, nullptr);
-  vkDestroyBuffer(device_, vertex_buffer_, nullptr);
-  vkFreeMemory(device_, vertex_buffer_memory_, nullptr);
 
   for (size_t i = 0; i < kMaxFramesInFlight; i++) {
     vkDestroySemaphore(device_, render_finished_semaphores_[i], nullptr);
@@ -653,8 +644,8 @@ void Application::CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceS
   vkFreeCommandBuffers(device_, command_pool_, 1, &command_buffer);
 }
 
-void Application::CreateVertexBuffer() {
-  VkDeviceSize buffer_size = sizeof(kVertices[0]) * kVertices.size();
+void Application::CreateVertexBuffer(VkBuffer& vertex_buffer, VkDeviceMemory& vertex_buffer_memory, const std::vector<Vertex> &vertexes) {
+  VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
 
   VkBuffer staging_buffer;
   VkDeviceMemory staging_buffer_memory;
@@ -663,20 +654,20 @@ void Application::CreateVertexBuffer() {
 
   void *data;
   vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
-  memcpy(data, kVertices.data(), static_cast<size_t>(buffer_size));
+  memcpy(data, vertexes.data(), static_cast<size_t>(buffer_size));
   vkUnmapMemory(device_, staging_buffer_memory);
 
   CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-               vertex_buffer_, vertex_buffer_memory_);
+               vertex_buffer, vertex_buffer_memory);
 
-  CopyBuffer(staging_buffer, vertex_buffer_, buffer_size);
+  CopyBuffer(staging_buffer, vertex_buffer, buffer_size);
 
   vkDestroyBuffer(device_, staging_buffer, nullptr);
   vkFreeMemory(device_, staging_buffer_memory, nullptr);
 }
 
-void Application::CreateIndexBuffer() {
-  VkDeviceSize buffer_size = sizeof(kIndices[0]) * kIndices.size();
+void Application::CreateIndexBuffer(VkBuffer& index_buffer, VkDeviceMemory& index_buffer_memory, const std::vector<uint16_t> &indices) {
+  VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
   VkBuffer staging_buffer;
   VkDeviceMemory staging_buffer_memory;
@@ -685,13 +676,13 @@ void Application::CreateIndexBuffer() {
 
   void *data;
   vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
-  memcpy(data, kIndices.data(), static_cast<size_t>(buffer_size));
+  memcpy(data, indices.data(), static_cast<size_t>(buffer_size));
   vkUnmapMemory(device_, staging_buffer_memory);
 
   CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-               index_buffer_, index_buffer_memory_);
+               index_buffer, index_buffer_memory);
 
-  CopyBuffer(staging_buffer, index_buffer_, buffer_size);
+  CopyBuffer(staging_buffer, index_buffer, buffer_size);
 
   vkDestroyBuffer(device_, staging_buffer, nullptr);
   vkFreeMemory(device_, staging_buffer_memory, nullptr);
@@ -733,16 +724,7 @@ void Application::CreateCommandBuffers() {
 
     vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline_);
 
-    VkBuffer vertex_buffers[] = {vertex_buffer_};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0, VK_INDEX_TYPE_UINT16);
-
-    vkCmdDrawIndexed(command_buffers_[i], static_cast<uint32_t>(kIndices.size()), 1, 0, 0, 0);
-
-    vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline_);
-
-    vkCmdDrawIndexed(command_buffers_[i], static_cast<uint32_t>(kIndices.size()), 1, 0, 0, 0);
+    DrawRenderPass(command_buffers_[i]);
 
     vkCmdEndRenderPass(command_buffers_[i]);
 

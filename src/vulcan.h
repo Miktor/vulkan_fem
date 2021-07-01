@@ -64,11 +64,6 @@ class Application {
 
   VkCommandPool command_pool_;
 
-  VkBuffer vertex_buffer_;
-  VkDeviceMemory vertex_buffer_memory_;
-  VkBuffer index_buffer_;
-  VkDeviceMemory index_buffer_memory_;
-
   std::vector<VkCommandBuffer> command_buffers_;
 
   std::vector<VkSemaphore> image_available_semaphores_;
@@ -78,13 +73,18 @@ class Application {
   size_t current_frame_ = 0;
 
   virtual void PostVulkanInit() {}
+  virtual void Cleanup();
+  virtual void DrawRenderPass(VkCommandBuffer command_buffers) {}
+  virtual void CrateBuffers() {}
+
+  void CreateIndexBuffer(VkBuffer &index_buffer, VkDeviceMemory &index_buffer_memory, const std::vector<uint16_t> &vertexes);
+  void CreateVertexBuffer(VkBuffer &vertex_buffer, VkDeviceMemory &vertex_buffer_memory, const std::vector<Vertex> &indices);
 
  private:
   void InitWindow();
   void InitVulkan();
   void MainLoop();
   void CleanupSwapChain();
-  void Cleanup();
   void CreateInstance();
   static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create_info);
   void SetupDebugMessenger();
@@ -103,8 +103,6 @@ class Application {
                     VkDeviceMemory &buffer_memory);
   void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
-  void CreateIndexBuffer();
-  void CreateVertexBuffer();
   void CreateCommandBuffers();
   void CreateSyncObjects();
 
