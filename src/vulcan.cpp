@@ -78,9 +78,10 @@ std::vector<VkVertexInputAttributeDescription> Vertex::GetAttributeDescriptions(
 }
 
 void Application::Run() {
+  PreInit();
+
   InitWindow();
   InitVulkan();
-  PostVulkanInit();
   MainLoop();
   Cleanup();
 }

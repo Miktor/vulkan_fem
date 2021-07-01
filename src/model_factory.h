@@ -19,7 +19,7 @@ class ModelFactory {
         {.0, 1.0, .0},
         {1.0, 1.0, .0},
     };
-    std::vector<uint16_t> indices = {0, 1, 2, 1, 3, 2};
+    std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
     std::vector<Constraint> constraints = {{0, Constraint::kUxy}, {1, Constraint::kUy}};
     std::vector<Load<2>> loads = {{2, {0, 1.}}, {3, {0, 1.}}};

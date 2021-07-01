@@ -5,9 +5,6 @@
 #include "vulcan.h"
 #include <memory>
 
-const std::vector<Vertex> kVertices = {{{-0.5F, -0.5F}}, {{0.5F, -0.5F}}, {{0.5F, 0.5F}}, {{-0.5F, 0.5F}}};
-const std::vector<uint16_t> kIndices = {0, 1, 2, 2, 3, 0};
-
 class FEMApplication final : public Application {
  private:
   VkBuffer vertex_buffer_;
@@ -15,11 +12,14 @@ class FEMApplication final : public Application {
   VkBuffer index_buffer_;
   VkDeviceMemory index_buffer_memory_;
 
+  std::vector<Vertex> vertices_;
+  std::vector<uint16_t> indices_;
+
   std::shared_ptr<vulkan_fem::Solver<2>> solver_;
   std::shared_ptr<vulkan_fem::Model<2>> model_;
 
  protected:
-  void PostVulkanInit() final {
+  void PreInit() final {
     solver_ = std::make_shared<vulkan_fem::Solver<2>>();
     model_ = vulkan_fem::ModelFactory::CreateRectangle();
   }
@@ -37,9 +37,25 @@ class FEMApplication final : public Application {
     return true;
   }
 
+  static std::vector<Vertex> ToVertices(const std::vector<vulkan_fem::Vertex3> &data) {
+    std::vector<Vertex> result;
+    result.reserve(data.size());
+
+    for (const auto &input : data) {
+      Vertex vertex{};
+      vertex.pos_ = {input.x_, input.y_};
+      result.push_back(vertex);
+    }
+
+    return result;
+  }
+
   void CrateBuffers() final {
-    CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, kVertices);
-    CreateIndexBuffer(index_buffer_, index_buffer_memory_, kIndices);
+    indices_ = model_->GetIndices();
+    vertices_ = ToVertices(model_->GetVertices());
+
+    CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices_);
+    CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices_);
   }
 
   void DrawRenderPass(VkCommandBuffer command_buffers) final {
@@ -49,7 +65,7 @@ class FEMApplication final : public Application {
     vkCmdBindVertexBuffers(command_buffers, 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(command_buffers, index_buffer_, 0, VK_INDEX_TYPE_UINT16);
 
-    vkCmdDrawIndexed(command_buffers, static_cast<uint32_t>(kIndices.size()), 1, 0, 0, 0);
+    vkCmdDrawIndexed(command_buffers, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
   }
 
   void Cleanup() final {

@@ -3,7 +3,9 @@
 #include "elements.h"
 #include "fem.h"
 #include "material.h"
+#include <iostream>
 #include <utility>
+#include <vector>
 
 namespace vulkan_fem {
 
@@ -45,7 +47,10 @@ class Model {
         elements_(std::move(vertices)),
         element_inidices_(std::move(indices)),
         constraints_(std::move(constraints)),
-        loads_(BuildLoadsVector(loads)) {}
+        loads_(BuildLoadsVector(loads)) {
+    std::cout << elements_ << std::endl;
+    std::cout << element_inidices_ << std::endl;
+  }
 
   [[nodiscard]] const std::vector<Vertex3> &GetVertices() const { return elements_; }
 
@@ -204,3 +209,21 @@ class Model {
 };
 
 }  // namespace vulkan_fem
+
+namespace std {
+template <typename T>
+T &operator<<(T &os, const vulkan_fem::Vertex3 &data) {
+  return os << data.x_ << ", " << data.y_ << ", " << data.z_;
+}
+
+template <typename T, typename V>
+T &operator<<(T &os, const std::vector<V> &data) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    if (it != data.begin()) {
+      os << std::endl;
+    }
+    os << *it;
+  }
+  return os;
+}
+}  // namespace std

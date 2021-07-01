@@ -72,13 +72,13 @@ class Application {
   std::vector<VkFence> images_in_flight_;
   size_t current_frame_ = 0;
 
-  virtual void PostVulkanInit() {}
+  virtual void PreInit() {}
   virtual void Cleanup();
   virtual void DrawRenderPass(VkCommandBuffer command_buffers) {}
   virtual void CrateBuffers() {}
 
-  void CreateIndexBuffer(VkBuffer &index_buffer, VkDeviceMemory &index_buffer_memory, const std::vector<uint16_t> &vertexes);
-  void CreateVertexBuffer(VkBuffer &vertex_buffer, VkDeviceMemory &vertex_buffer_memory, const std::vector<Vertex> &indices);
+  void CreateIndexBuffer(VkBuffer &index_buffer, VkDeviceMemory &index_buffer_memory, const std::vector<uint16_t> &indices);
+  void CreateVertexBuffer(VkBuffer &vertex_buffer, VkDeviceMemory &vertex_buffer_memory, const std::vector<Vertex> &vertexes);
 
  private:
   void InitWindow();
