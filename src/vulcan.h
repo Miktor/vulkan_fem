@@ -7,6 +7,7 @@
 #include <vector>
 
 #define GLFW_INCLUDE_VULKAN
+#include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
@@ -23,6 +24,14 @@ struct SwapChainSupportDetails {
   std::vector<VkSurfaceFormatKHR> formats_;
   std::vector<VkPresentModeKHR> present_modes_;
 };
+
+struct Vertex {
+  glm::vec2 pos_;
+
+  static VkVertexInputBindingDescription GetBindingDescription();
+  static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
+};
+
 
 class Application {
  public:

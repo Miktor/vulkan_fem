@@ -1,5 +1,6 @@
 #include "vulcan.h"
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -55,6 +56,29 @@ bool Application::ProcessInput(GLFWwindow *window, int key, int, int action, int
 
   return true;
 }
+
+VkVertexInputBindingDescription Vertex::GetBindingDescription() {
+  VkVertexInputBindingDescription binding_description{};
+
+  binding_description.binding = 0;
+  binding_description.stride = sizeof(Vertex);
+  binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  return binding_description;
+}
+
+std::array<VkVertexInputAttributeDescription, 2> Vertex::GetAttributeDescriptions() {
+  std::array<VkVertexInputAttributeDescription, 2> attribute_descriptions{};
+
+  attribute_descriptions[0].binding = 0;
+  attribute_descriptions[0].location = 0;
+  attribute_descriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+  attribute_descriptions[0].offset = offsetof(Vertex, pos_);
+
+  return attribute_descriptions;
+}
+
+const std::vector<Vertex> kVertices = {{{0.0F, -0.5F}}, {{0.5F, 0.5F}}, {{-0.5F, 0.5F}}};
 
 void Application::Run() {
   InitWindow();
@@ -413,8 +437,19 @@ void Application::CreateGraphicsPipeline() {
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info{};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertex_input_info.vertexBindingDescriptionCount = 0;
-  vertex_input_info.vertexAttributeDescriptionCount = 0;
+
+  auto binding_description = Vertex::GetBindingDescription();
+  auto attribute_descriptions = Vertex::GetAttributeDescriptions();
+
+  vertex_input_info.vertexBindingDescriptionCount = 1;
+  vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
+  vertex_input_info.pVertexBindingDescriptions = &binding_description;
+  vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.data();
+
+  VkPipelineInputAssemblyStateCreateInfo input_assembly{};
+  input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  input_assembly.primitiveRestartEnable = VK_FALSE;
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly{};
   input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
