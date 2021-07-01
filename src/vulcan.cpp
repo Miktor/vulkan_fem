@@ -1,5 +1,4 @@
 #include "vulcan.h"
-
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -8,9 +7,8 @@
 #include <optional>
 #include <set>
 #include <stdexcept>
-#include <vector>
 #include <string>
-
+#include <vector>
 
 constexpr uint32_t kWidth = 800;
 constexpr uint32_t kHeight = 600;
@@ -44,9 +42,24 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
   }
 }
 
+static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+  auto *app = reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
+  app->ProcessInput(window, key, scancode, action, mods);
+}
+
+bool Application::ProcessInput(GLFWwindow *window, int key, int, int action, int) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
+    return false;
+  }
+
+  return true;
+}
+
 void Application::Run() {
   InitWindow();
   InitVulkan();
+  PostVulkanInit();
   MainLoop();
   Cleanup();
 }
@@ -58,6 +71,9 @@ void Application::InitWindow() {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   window_ = glfwCreateWindow(kWidth, kHeight, "Vulkan", nullptr, nullptr);
+
+  glfwSetWindowUserPointer(window_, this);
+  glfwSetKeyCallback(window_, KeyCallback);
 }
 
 void Application::InitVulkan() {

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <iosfwd>
 #include <optional>
-#include <stddef.h>
 #include <vector>
 
 #define GLFW_INCLUDE_VULKAN
@@ -27,6 +27,8 @@ struct SwapChainSupportDetails {
 class Application {
  public:
   void Run();
+
+  virtual bool ProcessInput(GLFWwindow *window, int key, int scancode, int action, int mods);
 
  protected:
   GLFWwindow *window_;
@@ -60,6 +62,8 @@ class Application {
   std::vector<VkFence> in_flight_fences_;
   std::vector<VkFence> images_in_flight_;
   size_t current_frame_ = 0;
+
+  virtual void PostVulkanInit() {}
 
  private:
   void InitWindow();

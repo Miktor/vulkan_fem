@@ -1,11 +1,8 @@
 
+#include "fem_application.h"
 #include <cstdlib>
-#include <iostream>
 #include <exception>
-
-#define GLM_FORCE_RADIANS
-#define GLM_ENABLE_EXPERIMENTAL
-#include "vulcan.h"
+#include <iostream>
 
 // struct Vertex {
 //   glm::vec3 pos;
@@ -90,7 +87,7 @@
 // // }
 
 int main(const int /*argc*/, const char ** /*argv[]*/) {
-  Application app;
+  FEMApplication app;
 
   try {
     app.Run();
