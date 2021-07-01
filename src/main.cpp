@@ -29,63 +29,6 @@
 //   glm::mat4 proj;
 // };
 
-// // class VulkanFem : public vkb::VulkanApplication {
-// //  public:
-// //   VulkanFem() {}
-
-// //   // static void cursorPosCallback(GLFWwindow* window, double x, double y)
-// {
-// //   //   if (window == nullptr) return;
-
-// //   //   auto app =
-// //   reinterpret_cast<VulkanFem*>(glfwGetWindowUserPointer(window));
-// //   //   app->OnMouseMove(x, y);
-// //   // }
-
-// //   // static void focusCallback(GLFWwindow* window, int focus) {
-// //   //   if (window == nullptr) return;
-
-// //   //   auto app =
-// //   reinterpret_cast<VulkanFem*>(glfwGetWindowUserPointer(window));
-// //   //   app->OnFocusChange(focus == GLFW_TRUE);
-// //   // }
-
-// //   // static void scrollCallback(GLFWwindow*, double, double) {}
-
-// //   // static void keyCallback(GLFWwindow* window, int key, int, int action,
-// //   int) {
-// //   //   if (action != GLFW_PRESS) return;
-
-// //   //   auto app =
-// //   reinterpret_cast<VulkanFem*>(glfwGetWindowUserPointer(window));
-
-// //   //   switch (key) {
-// //   //     case GLFW_KEY_R:
-// //   //       break;
-// //   //     case GLFW_KEY_SPACE:
-// //   //       app->solver_->Solve(*app->model_);
-// //   //       break;
-// //   //   }
-// //   // }
-
-// //  protected:
-// //    void InitAdditionalResources()  {
-// //     solver_ = std::make_shared<vulkan_fem::Solver<2>>();
-// //     model_ = vulkan_fem::ModelFactory::CreateRectangle();
-// //   }
-
-// //  private:
-// //   std::shared_ptr<vulkan_fem::Solver<2>> solver_;
-// //   std::shared_ptr<vulkan_fem::Model<2>> model_;
-// // };
-
-// // VulkanExample* vulkanExample;
-// // static void handleEvent(const DFBWindowEvent* event) {
-// //   if (vulkanExample != NULL) {
-// //     vulkanExample->handleEvent(event);
-// //   }
-// // }
-
 int main(const int /*argc*/, const char ** /*argv[]*/) {
   FEMApplication app;
 
