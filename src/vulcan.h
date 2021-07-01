@@ -29,9 +29,8 @@ struct Vertex {
   glm::vec2 pos_;
 
   static VkVertexInputBindingDescription GetBindingDescription();
-  static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
+  static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 };
-
 
 class Application {
  public:
@@ -64,6 +63,12 @@ class Application {
   VkPipeline graphics_pipeline_;
 
   VkCommandPool command_pool_;
+
+  VkBuffer vertex_buffer_;
+  VkDeviceMemory vertex_buffer_memory_;
+  VkBuffer index_buffer_;
+  VkDeviceMemory index_buffer_memory_;
+
   std::vector<VkCommandBuffer> command_buffers_;
 
   std::vector<VkSemaphore> image_available_semaphores_;
@@ -78,6 +83,7 @@ class Application {
   void InitWindow();
   void InitVulkan();
   void MainLoop();
+  void CleanupSwapChain();
   void Cleanup();
   void CreateInstance();
   static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create_info);
@@ -92,11 +98,19 @@ class Application {
   void CreateGraphicsPipeline();
   void CreateFramebuffers();
   void CreateCommandPool();
+
+  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                    VkDeviceMemory &buffer_memory);
+  void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
+
+  void CreateIndexBuffer();
+  void CreateVertexBuffer();
   void CreateCommandBuffers();
   void CreateSyncObjects();
 
   void DrawFrame();
 
+  uint32_t FindMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);
   VkShaderModule CreateShaderModule(const std::vector<char> &code);
   static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
   static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
