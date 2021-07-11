@@ -14,10 +14,10 @@ class ModelFactory {
 
   static std::shared_ptr<Model<2>> CreateRectangle() {
     std::vector<Vertex3> vertices = {
-        {.0, .0, .0},
-        {1.0, .0, .0},
-        {.0, 1.0, .0},
-        {1.0, 1.0, .0},
+        {-.5, -.5, .0},
+        {.5, -.5, .0},
+        {.5, .5, .0},
+        {-.5, 0.5, .0},
     };
     std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
