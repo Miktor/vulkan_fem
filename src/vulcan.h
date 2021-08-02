@@ -75,10 +75,15 @@ class Application {
   virtual void PreInit() {}
   virtual void Cleanup();
   virtual void DrawRenderPass(VkCommandBuffer command_buffers) {}
+  virtual void PreDrawFrame(uint32_t image_index) {}
   virtual void CrateBuffers() {}
 
   void CreateIndexBuffer(VkBuffer &index_buffer, VkDeviceMemory &index_buffer_memory, const std::vector<uint16_t> &indices);
   void CreateVertexBuffer(VkBuffer &vertex_buffer, VkDeviceMemory &vertex_buffer_memory, const std::vector<Vertex> &vertexes);
+
+  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                    VkDeviceMemory &buffer_memory);
+  void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
  private:
   void InitWindow();
@@ -98,10 +103,6 @@ class Application {
   void CreateGraphicsPipeline();
   void CreateFramebuffers();
   void CreateCommandPool();
-
-  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                    VkDeviceMemory &buffer_memory);
-  void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
   void CreateCommandBuffers();
   void CreateSyncObjects();

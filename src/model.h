@@ -4,6 +4,7 @@
 #include "fem.h"
 #include "material.h"
 #include <iostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -58,8 +59,41 @@ class Model {
 
   Eigen::VectorXf GetLoads() { return loads_; }
 
+  void AccountDisplacements(const Eigen::VectorXf &displacements) {
+    if (displacements.size() / DIM != elements_.size()) {
+      throw std::runtime_error("displacements.size() / DIM != elements_.size()");
+    }
+
+    int current = 0;
+    if (displacements.rows() != elements_.size() * DIM) {
+      throw std::runtime_error("invalid displacement count");
+    }
+
+    for (int c = 0; c < displacements.rows(); c += DIM) {
+      for (int i = 0; i < DIM; ++i) {
+        std::cout << "c: " << c << "; i: " << i << std::endl;
+
+        switch (i) {
+          case 0:
+            elements_[current].x_ += displacements[c + i];
+            break;
+          case 1:
+            elements_[current].y_ += displacements[c + i];
+            break;
+          case 2:
+            elements_[current].z_ += displacements[c + i];
+            break;
+          default:
+            throw std::runtime_error("Invalid dims");
+        }
+      }
+      ++current;
+    }
+  }
+
   ElementMatrix BuildGlobalStiffnesMatrix() {
     ElementMatrix global_stiffness_matrix(elements_.size() * DIM, elements_.size() * DIM);
+    global_stiffness_matrix.setZero();
 
     const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
@@ -67,6 +101,7 @@ class Model {
     // const uint32_t order = element_type_->GetOrder();
 
     MatrixFixedCols<DIM> elem_transform(element_count, DIM);
+    elem_transform.setZero();
     std::vector<Precision> jacobian_determinants;
 
     using T = Eigen::Triplet<Precision>;

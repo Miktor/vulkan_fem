@@ -763,6 +763,8 @@ void Application::DrawFrame() {
   uint32_t image_index;
   vkAcquireNextImageKHR(device_, swap_chain_, UINT64_MAX, image_available_semaphores_[current_frame_], VK_NULL_HANDLE, &image_index);
 
+  PreDrawFrame(image_index);
+
   if (images_in_flight_[image_index] != VK_NULL_HANDLE) {
     vkWaitForFences(device_, 1, &images_in_flight_[image_index], VK_TRUE, UINT64_MAX);
   }

@@ -19,8 +19,11 @@ class Solver {
     Eigen::VectorXf displacements = solver.solve(model.GetLoads());
 
     std::cout << displacements << std::endl;
+    
+    model.AccountDisplacements(displacements);
+
+    std::cout << "new coords: " << model.GetVertices() << std::endl;
   }
 };
 
 }  // namespace vulkan_fem
-

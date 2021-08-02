@@ -3,6 +3,7 @@
 #include "model_factory.h"
 #include "solver.h"
 #include "vulcan.h"
+#include <cstddef>
 #include <memory>
 
 class FEMApplication final : public Application {
@@ -56,6 +57,25 @@ class FEMApplication final : public Application {
 
     CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices_);
     CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices_);
+  }
+
+  void PreDrawFrame(uint32_t) final {
+    const auto vertexes = ToVertices(model_->GetVertices());
+    VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+    CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 staging_buffer, staging_buffer_memory);
+
+    void *data;
+    vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
+    memcpy(data, vertices_.data(), static_cast<size_t>(buffer_size));
+    vkUnmapMemory(device_, staging_buffer_memory);
+
+    CopyBuffer(staging_buffer, vertex_buffer_, buffer_size);
+    vkDestroyBuffer(device_, staging_buffer, nullptr);
+    vkFreeMemory(device_, staging_buffer_memory, nullptr);
   }
 
   void DrawRenderPass(VkCommandBuffer command_buffers) final {
