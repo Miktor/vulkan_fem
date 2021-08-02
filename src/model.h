@@ -73,13 +73,13 @@ class Model {
       for (int i = 0; i < DIM; ++i) {
         switch (i) {
           case 0:
-            elements_[current].x_ += displacements[c + i];
+            elements_[current].x_ += displacements[c + i] * 50.0;
             break;
           case 1:
-            elements_[current].y_ += displacements[c + i];
+            elements_[current].y_ += displacements[c + i] * 50.0;
             break;
           case 2:
-            elements_[current].z_ += displacements[c + i];
+            elements_[current].z_ += displacements[c + i] * 50.0;
             break;
           default:
             throw std::runtime_error("Invalid dims");

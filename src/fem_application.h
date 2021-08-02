@@ -4,7 +4,9 @@
 #include "solver.h"
 #include "vulcan.h"
 #include <cstddef>
+#include <iostream>
 #include <memory>
+#include <ostream>
 
 class FEMApplication final : public Application {
  private:
@@ -13,11 +15,12 @@ class FEMApplication final : public Application {
   VkBuffer index_buffer_;
   VkDeviceMemory index_buffer_memory_;
 
-  std::vector<Vertex> vertices_;
   std::vector<uint16_t> indices_;
 
   std::shared_ptr<vulkan_fem::Solver<2>> solver_;
   std::shared_ptr<vulkan_fem::Model<2>> model_;
+
+  bool needs_update_ = false;
 
  protected:
   void PreInit() final {
@@ -32,6 +35,7 @@ class FEMApplication final : public Application {
 
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
       solver_->Solve(*model_);
+      needs_update_ = true;
       return false;
     }
 
@@ -53,13 +57,17 @@ class FEMApplication final : public Application {
 
   void CrateBuffers() final {
     indices_ = model_->GetIndices();
-    vertices_ = ToVertices(model_->GetVertices());
+    const auto vertices = ToVertices(model_->GetVertices());
 
     CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices_);
-    CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices_);
+    CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices);
   }
 
   void PreDrawFrame(uint32_t) final {
+    if (!needs_update_) {
+      return;
+    }
+
     const auto vertexes = ToVertices(model_->GetVertices());
     VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
 
@@ -70,12 +78,15 @@ class FEMApplication final : public Application {
 
     void *data;
     vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
-    memcpy(data, vertices_.data(), static_cast<size_t>(buffer_size));
+    memcpy(data, vertexes.data(), static_cast<size_t>(buffer_size));
+
     vkUnmapMemory(device_, staging_buffer_memory);
 
     CopyBuffer(staging_buffer, vertex_buffer_, buffer_size);
     vkDestroyBuffer(device_, staging_buffer, nullptr);
     vkFreeMemory(device_, staging_buffer_memory, nullptr);
+
+    needs_update_ = false;
   }
 
   void DrawRenderPass(VkCommandBuffer command_buffers) final {

@@ -16,7 +16,6 @@ ELSEIF(APPLE)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_MACOS_MVK")
 ENDIF()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/Library/Developer/CommandLineTools/usr/include/c++/v1")
 
 IF(MSVC)
     add_definitions(-DNOMINMAX)
