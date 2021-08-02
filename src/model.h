@@ -49,8 +49,8 @@ class Model {
         element_inidices_(std::move(indices)),
         constraints_(std::move(constraints)),
         loads_(BuildLoadsVector(loads)) {
-    std::cout << elements_ << std::endl;
-    std::cout << element_inidices_ << std::endl;
+    std::cout << "elements_: " << elements_ << std::endl;
+    std::cout << "element_inidices_: " << element_inidices_ << std::endl;
   }
 
   [[nodiscard]] const std::vector<Vertex3> &GetVertices() const { return elements_; }
@@ -71,8 +71,6 @@ class Model {
 
     for (int c = 0; c < displacements.rows(); c += DIM) {
       for (int i = 0; i < DIM; ++i) {
-        std::cout << "c: " << c << "; i: " << i << std::endl;
-
         switch (i) {
           case 0:
             elements_[current].x_ += displacements[c + i];
@@ -92,9 +90,6 @@ class Model {
   }
 
   ElementMatrix BuildGlobalStiffnesMatrix() {
-    ElementMatrix global_stiffness_matrix(elements_.size() * DIM, elements_.size() * DIM);
-    global_stiffness_matrix.setZero();
-
     const uint32_t number_of_elements = element_inidices_.size() / DIM;
 
     const uint32_t element_count = element_type_->GetElementCount();
@@ -129,10 +124,16 @@ class Model {
       Eigen::Matrix<Precision, 6, 6> element_stiffnes_matrix =
           b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
 
+      std::cout << "K: " << element_stiffnes_matrix << std::endl;
+      std::cout << "B: " << b_matrix << std::endl;
+
       for (uint32_t i = 0; i < element_count; ++i) {
         for (uint32_t j = 0; j < element_count; ++j) {
           const uint16_t global_index_i = element_inidices_[index + i];
           const uint16_t global_index_j = element_inidices_[index + j];
+
+          std::cout << "global_index_i: " << global_index_i << std::endl;
+          std::cout << "global_index_j: " << global_index_j << std::endl;
 
           // x coords
           triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 0, element_stiffnes_matrix(DIM * i + 0, DIM * j + 0));
@@ -147,6 +148,8 @@ class Model {
       index += element_count;
     }
 
+    ElementMatrix global_stiffness_matrix(elements_.size() * DIM, elements_.size() * DIM);
+    global_stiffness_matrix.setZero();
     global_stiffness_matrix.setFromTriplets(triplets.begin(), triplets.end());
     return global_stiffness_matrix;
   }
@@ -198,7 +201,6 @@ class Model {
     jacobian_determinants.reserve(integration_points.size());
 
     for (const auto &ip : integration_points) {
-      auto shape_function = element_type->CalcShape(ip);
       auto dshape = element_type->CalcDShape(ip);
 
       // build jacobian (d(x, y, z)/d(xi, eta, zeta))
