@@ -205,7 +205,10 @@ class Model {
       auto dshape = element_type->CalcDShape(ip);
 
       // build jacobian (d(x, y, z)/d(xi, eta, zeta))
+      std::cout << "D: " << dshape << std::endl;
+      std::cout << "E: " << elem_transform << std::endl;
       const MatrixDim<DIM> jacobian = dshape * elem_transform;
+      std::cout << "j: " << jacobian << std::endl;
       const Precision jacobian_det = jacobian.determinant();
       const MatrixDim<DIM> inverse_jacobian = jacobian.inverse();
 

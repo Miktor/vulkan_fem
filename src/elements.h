@@ -41,7 +41,7 @@ class ElementTransformations {};
 
 class TetrahedronElement : public Element<3> {
  public:
-  TetrahedronElement() : Element<3>(4, 1){}
+  TetrahedronElement() : Element<3>(4, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
     static const std::vector<std::vector<Precision>> kIntegrationPoints{{0.25, 0.25, 0.25}};  // TODO(dmitrygladky): add correct IP
@@ -86,7 +86,7 @@ class TetrahedronElement : public Element<3> {
 
 class TriangleElement : public Element<2> {
  public:
-  TriangleElement() : Element<2>(3, 1){}
+  TriangleElement() : Element<2>(3, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
     static const std::vector<std::vector<Precision>> kIntegrationPoints{{1. / 3., 1. / 3.}};
@@ -101,7 +101,7 @@ class TriangleElement : public Element<2> {
     return {1 - xi - eta, xi, eta};
   }
 
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &/*ip*/) override {
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override {
     MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 3>();
     // 1st row
     // dN(i) / dXi
@@ -121,7 +121,7 @@ class TriangleElement : public Element<2> {
 
 class TriangleElement2 : public Element<2> {
  public:
-  TriangleElement2() : Element<2>(6, 1){}
+  TriangleElement2() : Element<2>(6, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
     static const std::vector<std::vector<Precision>> kIntegrationPoints{
@@ -147,7 +147,7 @@ class TriangleElement2 : public Element<2> {
     };
   }
 
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &/*ip*/) override {
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override {
     MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 3>();
     // 1st row
     // dN(i) / dXi
@@ -167,7 +167,7 @@ class TriangleElement2 : public Element<2> {
 
 class RectangleElement : public Element<2> {
  public:
-  RectangleElement() : Element<2>(4, 1){}
+  RectangleElement() : Element<2>(4, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
     static const Precision kIpOffset = std::sqrt(3) / 3;
@@ -181,28 +181,28 @@ class RectangleElement : public Element<2> {
   };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
-    const Precision eta = ip[0];
-    const Precision xi = ip[1];
+    const Precision xi = ip[0];   // ξ
+    const Precision eta = ip[1];  // η
 
     // define shape functions
     return {
-        (1 - eta) * (1 - xi) / 4,
-        (1 + eta) * (1 - xi) / 4,
-        (1 + eta) * (1 + xi) / 4,
-        (1 - eta) * (1 + xi) / 4,
+        (1 - xi) * (1 - eta) / 4,
+        (1 + xi) * (1 - eta) / 4,
+        (1 + xi) * (1 + eta) / 4,
+        (1 - xi) * (1 + eta) / 4,
     };
   }
 
   MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override {
     MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 4>();
 
-    const Precision eta = ip[0];
-    const Precision xi = ip[1];
+    const Precision xi = ip[0];   // ξ
+    const Precision eta = ip[1];  // η
 
     // 1st row
     // dN(i) / dXi
     dshape(0, 0) = (eta - 1.) / 4;
-    dshape(0, 1) = (eta - 1.) / 4;
+    dshape(0, 1) = (1. - eta) / 4;
     dshape(0, 2) = (eta + 1.) / 4;
     dshape(0, 3) = (-eta - 1.) / 4;
 
@@ -211,7 +211,7 @@ class RectangleElement : public Element<2> {
     dshape(1, 0) = (xi - 1.) / 4;
     dshape(1, 1) = (-xi - 1.) / 4;
     dshape(1, 2) = (xi + 1.) / 4;
-    dshape(1, 3) = (xi - 1.) / 4;
+    dshape(1, 3) = (1 - xi) / 4;
 
     return dshape;
   }

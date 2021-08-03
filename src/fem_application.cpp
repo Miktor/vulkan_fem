@@ -2,7 +2,7 @@
 
 void FEMApplication::PreInit() {
   solver_ = std::make_shared<vulkan_fem::Solver<2>>();
-  model_ = vulkan_fem::ModelFactory::CreateRectangle();
+  model_ = vulkan_fem::ModelFactory::CreateRectangle2();
 }
 
 bool FEMApplication::ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods) {
