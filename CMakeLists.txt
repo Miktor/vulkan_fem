@@ -4,7 +4,7 @@ project(vulkan_fem VERSION 0.1.0)
 enable_language(CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# add_compile_options(-std=c++17)
+add_compile_options(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_CXX_EXTENSIONS off)
