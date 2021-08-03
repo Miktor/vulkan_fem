@@ -47,7 +47,7 @@ static void KeyCallback(GLFWindow *window, int key, int scancode, int action, in
   app->ProcessInput(window, key, scancode, action, mods);
 }
 
-bool Application::ProcessInput(GLFWindow *window, int key, int, int action, int) {
+bool Application::ProcessInput(GLFWindow *window, int key, int /*scancode*/, int action, int /*mods*/) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
     return false;
@@ -217,7 +217,9 @@ void Application::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateIn
 }
 
 void Application::SetupDebugMessenger() {
-  if (!kEnableValidationLayers) return;
+  if (!kEnableValidationLayers) {
+    return;
+  }
 
   VkDebugUtilsMessengerCreateInfoEXT create_info;
   PopulateDebugMessengerCreateInfo(create_info);
@@ -645,7 +647,7 @@ void Application::CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceS
   vkFreeCommandBuffers(device_, command_pool_, 1, &command_buffer);
 }
 
-void Application::CreateVertexBuffer(VkBuffer& vertex_buffer, VkDeviceMemory& vertex_buffer_memory, const std::vector<Vertex> &vertexes) {
+void Application::CreateVertexBuffer(VkBuffer &vertex_buffer, VkDeviceMemory &vertex_buffer_memory, const std::vector<Vertex> &vertexes) {
   VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
 
   VkBuffer staging_buffer;
@@ -667,7 +669,7 @@ void Application::CreateVertexBuffer(VkBuffer& vertex_buffer, VkDeviceMemory& ve
   vkFreeMemory(device_, staging_buffer_memory, nullptr);
 }
 
-void Application::CreateIndexBuffer(VkBuffer& index_buffer, VkDeviceMemory& index_buffer_memory, const std::vector<uint16_t> &indices) {
+void Application::CreateIndexBuffer(VkBuffer &index_buffer, VkDeviceMemory &index_buffer_memory, const std::vector<uint16_t> &indices) {
   VkDeviceSize buffer_size = sizeof(indices[0]) * indices.size();
 
   VkBuffer staging_buffer;

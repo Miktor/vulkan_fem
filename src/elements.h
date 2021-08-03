@@ -41,11 +41,11 @@ class ElementTransformations {};
 
 class TetrahedronElement : public Element<3> {
  public:
-  TetrahedronElement() : Element<3>(4, 1) {}
+  TetrahedronElement() : Element<3>(4, 1){}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const std::vector<std::vector<Precision>> integration_points{{0.25, 0.25, 0.25}};  // TODO
-    return integration_points;
+    static const std::vector<std::vector<Precision>> kIntegrationPoints{{0.25, 0.25, 0.25}};  // TODO(dmitrygladky): add correct IP
+    return kIntegrationPoints;
   };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
@@ -57,7 +57,7 @@ class TetrahedronElement : public Element<3> {
     return {1 - xi - eta - zeta, xi, eta, zeta};
   }
 
-  MatrixFixedRows<3, Precision> CalcDShape(const std::vector<Precision> &) override {
+  MatrixFixedRows<3, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override {
     MatrixFixedRows<3, Precision> dshape = Eigen::Matrix<Precision, 3, 4>();
     // 1st row
     // dN(i) / dXi
@@ -86,11 +86,11 @@ class TetrahedronElement : public Element<3> {
 
 class TriangleElement : public Element<2> {
  public:
-  TriangleElement() : Element<2>(3, 1) {}
+  TriangleElement() : Element<2>(3, 1){}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const std::vector<std::vector<Precision>> integration_points{{1. / 3., 1. / 3.}};
-    return integration_points;
+    static const std::vector<std::vector<Precision>> kIntegrationPoints{{1. / 3., 1. / 3.}};
+    return kIntegrationPoints;
   };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
@@ -101,7 +101,7 @@ class TriangleElement : public Element<2> {
     return {1 - xi - eta, xi, eta};
   }
 
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &) override {
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &/*ip*/) override {
     MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 3>();
     // 1st row
     // dN(i) / dXi
@@ -121,15 +121,15 @@ class TriangleElement : public Element<2> {
 
 class TriangleElement2 : public Element<2> {
  public:
-  TriangleElement2() : Element<2>(6, 1) {}
+  TriangleElement2() : Element<2>(6, 1){}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const std::vector<std::vector<Precision>> integration_points{
+    static const std::vector<std::vector<Precision>> kIntegrationPoints{
         {1. / 6., 1. / 6.},
         {2. / 3., 1. / 6.},
         {1. / 6., 2. / 3.},
     };
-    return integration_points;
+    return kIntegrationPoints;
   };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
@@ -147,7 +147,7 @@ class TriangleElement2 : public Element<2> {
     };
   }
 
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &) override {
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &/*ip*/) override {
     MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 3>();
     // 1st row
     // dN(i) / dXi
@@ -167,17 +167,17 @@ class TriangleElement2 : public Element<2> {
 
 class RectangleElement : public Element<2> {
  public:
-  RectangleElement() : Element<2>(4, 1) {}
+  RectangleElement() : Element<2>(4, 1){}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const Precision ip_offset = std::sqrt(3) / 3;
-    static const std::vector<std::vector<Precision>> integration_points{
-        {-ip_offset, -ip_offset},
-        {ip_offset, -ip_offset},
-        {-ip_offset, ip_offset},
-        {ip_offset, ip_offset},
+    static const Precision kIpOffset = std::sqrt(3) / 3;
+    static const std::vector<std::vector<Precision>> kIntegrationPoints{
+        {-kIpOffset, -kIpOffset},
+        {kIpOffset, -kIpOffset},
+        {-kIpOffset, kIpOffset},
+        {kIpOffset, kIpOffset},
     };
-    return integration_points;
+    return kIntegrationPoints;
   };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {

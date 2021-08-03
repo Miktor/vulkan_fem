@@ -39,30 +39,30 @@ class Application {
   virtual bool ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods);
 
  protected:
-  GLFWindow *window_;
+  GLFWindow *window_ = nullptr;
 
-  VkInstance instance_;
-  VkDebugUtilsMessengerEXT debug_messenger_;
-  VkSurfaceKHR surface_;
+  VkInstance instance_ = VK_NULL_HANDLE;
+  VkDebugUtilsMessengerEXT debug_messenger_ = VK_NULL_HANDLE;
+  VkSurfaceKHR surface_ = VK_NULL_HANDLE;
 
   VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
-  VkDevice device_;
+  VkDevice device_ = VK_NULL_HANDLE;
 
-  VkQueue graphics_queue_;
-  VkQueue present_queue_;
+  VkQueue graphics_queue_ = VK_NULL_HANDLE;
+  VkQueue present_queue_ = VK_NULL_HANDLE;
 
-  VkSwapchainKHR swap_chain_;
+  VkSwapchainKHR swap_chain_ = VK_NULL_HANDLE;
   std::vector<VkImage> swap_chain_images_;
-  VkFormat swap_chain_image_format_;
+  VkFormat swap_chain_image_format_ = VkFormat::VK_FORMAT_UNDEFINED;
   VkExtent2D swap_chain_extent_;
   std::vector<VkImageView> swap_chain_image_views_;
   std::vector<VkFramebuffer> swap_chain_framebuffers_;
 
-  VkRenderPass render_pass_;
-  VkPipelineLayout pipeline_layout_;
-  VkPipeline graphics_pipeline_;
+  VkRenderPass render_pass_ = VK_NULL_HANDLE;
+  VkPipelineLayout pipeline_layout_ = VK_NULL_HANDLE;
+  VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
 
-  VkCommandPool command_pool_;
+  VkCommandPool command_pool_ = VK_NULL_HANDLE;
 
   std::vector<VkCommandBuffer> command_buffers_;
 

@@ -24,88 +24,17 @@ class FEMApplication final : public Application {
   bool needs_update_ = false;
 
  protected:
-  void PreInit() final {
-    solver_ = std::make_shared<vulkan_fem::Solver<2>>();
-    model_ = vulkan_fem::ModelFactory::CreateRectangle();
-  }
+  void PreInit() final;
 
-  bool ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods) final {
-    if (!Application::ProcessInput(window, key, scancode, action, mods)) {
-      return false;
-    }
+  bool ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods) final;
 
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-      solver_->Solve(*model_);
-      needs_update_ = true;
-      return false;
-    }
+  static std::vector<Vertex> ToVertices(const std::vector<vulkan_fem::Vertex3> &data);
 
-    return true;
-  }
+  void CrateBuffers() final;
 
-  static std::vector<Vertex> ToVertices(const std::vector<vulkan_fem::Vertex3> &data) {
-    std::vector<Vertex> result;
-    result.reserve(data.size());
+  void PreDrawFrame(uint32_t /*image_index*/) final;
 
-    for (const auto &input : data) {
-      Vertex vertex{};
-      vertex.pos_ = {input.x_, input.y_};
-      result.push_back(vertex);
-    }
+  void DrawRenderPass(VkCommandBuffer command_buffers) final;
 
-    return result;
-  }
-
-  void CrateBuffers() final {
-    indices_ = model_->GetIndices();
-    const auto vertices = ToVertices(model_->GetVertices());
-
-    CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices_);
-    CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices);
-  }
-
-  void PreDrawFrame(uint32_t) final {
-    if (!needs_update_) {
-      return;
-    }
-
-    const auto vertexes = ToVertices(model_->GetVertices());
-    VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
-
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
-    CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 staging_buffer, staging_buffer_memory);
-
-    void *data;
-    vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
-    memcpy(data, vertexes.data(), static_cast<size_t>(buffer_size));
-
-    vkUnmapMemory(device_, staging_buffer_memory);
-
-    CopyBuffer(staging_buffer, vertex_buffer_, buffer_size);
-    vkDestroyBuffer(device_, staging_buffer, nullptr);
-    vkFreeMemory(device_, staging_buffer_memory, nullptr);
-
-    needs_update_ = false;
-  }
-
-  void DrawRenderPass(VkCommandBuffer command_buffers) final {
-    VkBuffer vertex_buffers[] = {vertex_buffer_};
-    VkDeviceSize offsets[] = {0};
-
-    vkCmdBindVertexBuffers(command_buffers, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffers, index_buffer_, 0, VK_INDEX_TYPE_UINT16);
-
-    vkCmdDrawIndexed(command_buffers, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
-  }
-
-  void Cleanup() final {
-    vkDestroyBuffer(device_, index_buffer_, nullptr);
-    vkFreeMemory(device_, index_buffer_memory_, nullptr);
-    vkDestroyBuffer(device_, vertex_buffer_, nullptr);
-    vkFreeMemory(device_, vertex_buffer_memory_, nullptr);
-
-    Application::Cleanup();
-  }
+  void Cleanup() final;
 };

@@ -42,7 +42,7 @@ class Model {
   using Loads = Eigen::Matrix<Precision, 1, Eigen::Dynamic>;
 
   Model(std::shared_ptr<Element<DIM>> element_type, std::vector<Vertex3> vertices, std::vector<uint16_t> indices,
-        std::vector<Constraint> constraints, const std::vector<Load<DIM>> &loads, double e, double mu)
+        std::vector<Constraint> constraints, const std::vector<Load<DIM>> & loads, double e, double mu)
       : element_type_(std::move(element_type)),
         material_(e, mu),
         elements_(std::move(vertices)),
@@ -109,10 +109,11 @@ class Model {
         const uint16_t sub_element_index = element_inidices_[index + sub_index];
         const Vertex3 &sub_element_vertex = elements_[sub_element_index];
 
-        if (DIM == 2)
+        if (DIM == 2) {
           elem_transform.row(sub_index) << sub_element_vertex.x_, sub_element_vertex.y_;
-        else if (DIM == 3)
+        } else if (DIM == 3) {
           elem_transform.row(sub_index) << sub_element_vertex.x_, sub_element_vertex.y_, sub_element_vertex.z_;
+}
       }
 
       jacobian_determinants.clear();
@@ -156,11 +157,14 @@ class Model {
     for (const auto contraint : constraints_) {
       switch (DIM) {
         case 3:
-          if ((contraint.type_ & Constraint::kUz) != 0) indices_to_constraint.push_back(DIM * contraint.node_ + 2);
+          if ((contraint.type_ & Constraint::kUz) != 0) { indices_to_constraint.push_back(DIM * contraint.node_ + 2);
+}
         case 2:
-          if ((contraint.type_ & Constraint::kUy) != 0) indices_to_constraint.push_back(DIM * contraint.node_ + 1);
+          if ((contraint.type_ & Constraint::kUy) != 0) { indices_to_constraint.push_back(DIM * contraint.node_ + 1);
+}
         case 1:
-          if ((contraint.type_ & Constraint::kUx) != 0) indices_to_constraint.push_back(DIM * contraint.node_ + 0);
+          if ((contraint.type_ & Constraint::kUx) != 0) { indices_to_constraint.push_back(DIM * contraint.node_ + 0);
+}
         default:
           break;
       }
@@ -178,10 +182,11 @@ class Model {
   }
 
  private:
-  Loads BuildLoadsVector(const std::vector<Load<DIM>> &loads) {
+  Loads BuildLoadsVector(const std::vector<Load<DIM>> & loads) {
     Loads load_vector = Loads::Zero(elements_.size() * DIM);
     for (auto load : loads) {
-      for (uint32_t i = 0; i < DIM; ++i) load_vector[load.node_ * DIM + i] = load.forces_[i];
+      for (uint32_t i = 0; i < DIM; ++i) { load_vector[load.node_ * DIM + i] = load.forces_[i];
+}
     }
     return load_vector;
   }
@@ -190,8 +195,8 @@ class Model {
   // [ Ni 0
   // [ 0  Ni
   // [ Ni Ni
-  MatrixFixedRows<DIM> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type, const MatrixFixedCols<DIM> &elem_transform,
-                                         std::vector<Precision> &jacobian_determinants) {
+  MatrixFixedRows<DIM> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type, const MatrixFixedCols<DIM> & elem_transform,
+                                         std::vector<Precision> & jacobian_determinants) {
     MatrixFixedRows<DIM> element_matrix = MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
     const auto integration_points = element_type->GetIntegrationPoints();
     jacobian_determinants.reserve(integration_points.size());
@@ -216,7 +221,7 @@ class Model {
   // [ Nix 0
   // [ 0   Niy
   // [ Niy Nix
-  Eigen::Matrix<Precision, 3, Eigen::Dynamic> MakeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
+  Eigen::Matrix<Precision, 3, Eigen::Dynamic> MakeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> & elem_matrix) {
     Eigen::Matrix<Precision, 3, Eigen::Dynamic> strain_matrix(3, element_count * DIM);
     for (int i = 0; i < element_count; ++i) {
       strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);  // Nix
@@ -250,7 +255,7 @@ T &operator<<(T &os, const vulkan_fem::Vertex3 &data) {
 }
 
 template <typename T, typename V>
-T &operator<<(T &os, const std::vector<V> &data) {
+T &operator<<(T &os, const std::vector<V> & data) {
   for (auto it = data.begin(); it != data.end(); ++it) {
     if (it != data.begin()) {
       os << std::endl;

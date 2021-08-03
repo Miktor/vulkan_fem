@@ -10,13 +10,13 @@ template <uint32_t DIM = 3>
 class Solver {
  public:
   void Solve(Model<DIM> &model) {
-    auto global_stiffnes_matrix = model.BuildGlobalStiffnesMatrix();  // K_global
-    std::cout << "global_stiffnes_matrix: " << global_stiffnes_matrix << std::endl;
+    auto global_stiffness_matrix = model.BuildGlobalStiffnesMatrix();  // K_global
+    std::cout << "global_stiffness_matrix: " << global_stiffness_matrix << std::endl;
 
-    model.ApplyConstraints(global_stiffnes_matrix);
+    model.ApplyConstraints(global_stiffness_matrix);
 
-    Eigen::SimplicialLDLT<decltype(global_stiffnes_matrix)> solver(global_stiffnes_matrix);
-    std::cout << "global_stiffnes_matrix: " << global_stiffnes_matrix << std::endl;
+    Eigen::SimplicialLDLT<decltype(global_stiffness_matrix)> solver(global_stiffness_matrix);
+    std::cout << "global_stiffness_matrix: " << global_stiffness_matrix << std::endl;
     Eigen::VectorXf displacements = solver.solve(model.GetLoads());
 
     std::cout << "displacements: " << displacements << std::endl;

@@ -62,7 +62,7 @@ class ModelFactory {
   //}
 
  private:
-  static void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
+  static void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> & vertices, std::vector<uint16_t> & indices) {
     static const uint32_t kSides = 5;
     static const uint32_t kRings = 6;
 
@@ -118,7 +118,7 @@ class ModelFactory {
   }
 
   static void GenerateEndCapVertexData(const uint32_t sides, Precision r, Precision y, uint16_t &index, uint16_t &el_index,
-                                       std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
+                                       std::vector<Vertex3> & vertices, std::vector<uint16_t> & indices) {
     // Make a note of the vertex index for the center of the end cap
     const uint16_t end_cap_start_index = index;
 
