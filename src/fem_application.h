@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <vector>
 
 class FEMApplication final : public Application {
  private:
@@ -28,7 +29,7 @@ class FEMApplication final : public Application {
     model_ = vulkan_fem::ModelFactory::CreateRectangle();
   }
 
-  bool ProcessInput(GLFWwindow *window, int key, int scancode, int action, int mods) final {
+  bool ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods) final {
     if (!Application::ProcessInput(window, key, scancode, action, mods)) {
       return false;
     }

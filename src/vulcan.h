@@ -36,10 +36,10 @@ class Application {
  public:
   void Run();
 
-  virtual bool ProcessInput(GLFWwindow *window, int key, int scancode, int action, int mods);
+  virtual bool ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods);
 
  protected:
-  GLFWwindow *window_;
+  GLFWindow *window_;
 
   VkInstance instance_;
   VkDebugUtilsMessengerEXT debug_messenger_;

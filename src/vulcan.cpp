@@ -42,12 +42,12 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
   }
 }
 
-static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+static void KeyCallback(GLFWindow *window, int key, int scancode, int action, int mods) {
   auto *app = reinterpret_cast<Application *>(glfwGetWindowUserPointer(window));
   app->ProcessInput(window, key, scancode, action, mods);
 }
 
-bool Application::ProcessInput(GLFWwindow *window, int key, int, int action, int) {
+bool Application::ProcessInput(GLFWindow *window, int key, int, int action, int) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
     return false;

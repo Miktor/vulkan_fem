@@ -41,7 +41,7 @@ class Model {
   using ElementMatrix = Eigen::SparseMatrix<Precision>;
   using Loads = Eigen::Matrix<Precision, 1, Eigen::Dynamic>;
 
-  Model(std::shared_ptr<ScalarElement<DIM>> element_type, std::vector<Vertex3> vertices, std::vector<uint16_t> indices,
+  Model(std::shared_ptr<Element<DIM>> element_type, std::vector<Vertex3> vertices, std::vector<uint16_t> indices,
         std::vector<Constraint> constraints, const std::vector<Load<DIM>> &loads, double e, double mu)
       : element_type_(std::move(element_type)),
         material_(e, mu),
@@ -90,9 +90,9 @@ class Model {
   }
 
   ElementMatrix BuildGlobalStiffnesMatrix() {
-    const uint32_t number_of_elements = element_inidices_.size() / DIM;
-
     const uint32_t element_count = element_type_->GetElementCount();
+    const uint32_t number_of_elements = element_inidices_.size() / element_count;
+
     // const uint32_t order = element_type_->GetOrder();
 
     MatrixFixedCols<DIM> elem_transform(element_count, DIM);
@@ -116,13 +116,12 @@ class Model {
       }
 
       jacobian_determinants.clear();
-      auto elem_matrix = CalcElementMatrix(element_type_, elem_transform, jacobian_determinants);
-      auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
+      const auto elem_matrix = CalcElementMatrix(element_type_, elem_transform, jacobian_determinants);
+      const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
 
-      auto d_matrix = material_.GetStiffnessMatrix();
+      const auto d_matrix = material_.GetStiffnessMatrix();
 
-      Eigen::Matrix<Precision, 6, 6> element_stiffnes_matrix =
-          b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
+      const auto element_stiffnes_matrix = b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
 
       std::cout << "K: " << element_stiffnes_matrix << std::endl;
       std::cout << "B: " << b_matrix << std::endl;
@@ -131,9 +130,6 @@ class Model {
         for (uint32_t j = 0; j < element_count; ++j) {
           const uint16_t global_index_i = element_inidices_[index + i];
           const uint16_t global_index_j = element_inidices_[index + j];
-
-          std::cout << "global_index_i: " << global_index_i << std::endl;
-          std::cout << "global_index_j: " << global_index_j << std::endl;
 
           // x coords
           triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 0, element_stiffnes_matrix(DIM * i + 0, DIM * j + 0));
@@ -194,10 +190,10 @@ class Model {
   // [ Ni 0
   // [ 0  Ni
   // [ Ni Ni
-  MatrixFixedRows<DIM> CalcElementMatrix(std::shared_ptr<ScalarElement<DIM>> element_type, const MatrixFixedCols<DIM> &elem_transform,
+  MatrixFixedRows<DIM> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type, const MatrixFixedCols<DIM> &elem_transform,
                                          std::vector<Precision> &jacobian_determinants) {
     MatrixFixedRows<DIM> element_matrix = MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
-    const std::vector<std::vector<Precision>> &integration_points{{0.25, 0.25, 0.25}};
+    const auto integration_points = element_type->GetIntegrationPoints();
     jacobian_determinants.reserve(integration_points.size());
 
     for (const auto &ip : integration_points) {
@@ -220,8 +216,8 @@ class Model {
   // [ Nix 0
   // [ 0   Niy
   // [ Niy Nix
-  Eigen::Matrix<Precision, 3, 6> MakeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
-    Eigen::Matrix<Precision, 3, 6> strain_matrix;
+  Eigen::Matrix<Precision, 3, Eigen::Dynamic> MakeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
+    Eigen::Matrix<Precision, 3, Eigen::Dynamic> strain_matrix(3, element_count * DIM);
     for (int i = 0; i < element_count; ++i) {
       strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);  // Nix
       strain_matrix(0, 2 * i + 1) = 0.0F;
@@ -235,7 +231,7 @@ class Model {
     return strain_matrix;
   }
 
-  std::shared_ptr<ScalarElement<DIM>> element_type_;
+  std::shared_ptr<Element<DIM>> element_type_;
 
   LinearMaterial<DIM> material_;
   std::vector<Vertex3> elements_;

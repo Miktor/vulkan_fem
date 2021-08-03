@@ -15,6 +15,16 @@ class Element {
   // element order
   [[nodiscard]] uint32_t GetOrder() const { return order_; }
 
+  [[nodiscard]] virtual std::vector<std::vector<Precision>> GetIntegrationPoints() const = 0;
+
+  // calculate shape functions
+  // ip - integration point
+  // shape - shape function values
+  [[nodiscard]] virtual std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const = 0;
+
+  // calculate partial derivatives
+  virtual MatrixFixedRows<DIM, Precision> CalcDShape(const std::vector<Precision> &ip) = 0;
+
  protected:
   Element(uint32_t element_count, uint32_t order) : element_count_(element_count), order_(order) {}
   virtual ~Element() = default;
@@ -29,24 +39,14 @@ class ElementIndices {};
 template <uint32_t DIM = 3>
 class ElementTransformations {};
 
-template <uint32_t DIM = 3>
-class ScalarElement : public Element<DIM> {
+class TetrahedronElement : public Element<3> {
  public:
-  // calculate shape functions
-  // ip - integration point
-  // shape - shape function values
-  [[nodiscard]] virtual std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const = 0;
+  TetrahedronElement() : Element<3>(4, 1) {}
 
-  // calculate partial derivatives
-  virtual MatrixFixedRows<DIM, Precision> CalcDShape(const std::vector<Precision> &ip) = 0;
-
- protected:
-  ScalarElement(uint32_t element_count, uint32_t order) : Element<DIM>(element_count, order) {}
-};
-
-class TetrahedronElement : public ScalarElement<3> {
- public:
-  TetrahedronElement() : ScalarElement<3>(4, 1) {}
+  [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
+    static const std::vector<std::vector<Precision>> integration_points{{0.25, 0.25, 0.25}};  // TODO
+    return integration_points;
+  };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -84,9 +84,14 @@ class TetrahedronElement : public ScalarElement<3> {
   }
 };
 
-class TriangleElement : public ScalarElement<2> {
+class TriangleElement : public Element<2> {
  public:
-  TriangleElement() : ScalarElement<2>(3, 1) {}
+  TriangleElement() : Element<2>(3, 1) {}
+
+  [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
+    static const std::vector<std::vector<Precision>> integration_points{{1. / 3., 1. / 3.}};
+    return integration_points;
+  };
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -114,21 +119,101 @@ class TriangleElement : public ScalarElement<2> {
   }
 };
 
-class Element2dTo3d : public ScalarElement<3> {
- private:
-  std::shared_ptr<ScalarElement<2>> elem_;
-
+class TriangleElement2 : public Element<2> {
  public:
-  explicit Element2dTo3d(const std::shared_ptr<ScalarElement<2>> &elem)
-      : ScalarElement<3>(elem->GetElementCount(), elem->GetOrder()), elem_(elem) {}
+  TriangleElement2() : Element<2>(6, 1) {}
 
-  [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override { return elem_->CalcShape(ip); }
+  [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
+    static const std::vector<std::vector<Precision>> integration_points{
+        {1. / 6., 1. / 6.},
+        {2. / 3., 1. / 6.},
+        {1. / 6., 2. / 3.},
+    };
+    return integration_points;
+  };
 
-  MatrixFixedRows<3, Precision> CalcDShape(const std::vector<Precision> &ip) override {
-    auto dshape = elem_->CalcDShape(ip);
-    MatrixFixedRows<3, Precision> converted = MatrixFixedRows<3, Precision>::Zero(3, dshape.cols());
-    converted.topRows(2) = dshape.topRows(2);
-    return converted;
+  [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
+    const Precision xi = ip[0];
+    const Precision eta = ip[1];
+
+    // define shape functions
+    return {
+        xi * (2 * xi - 1),                        //
+        eta * (2 * eta - 1),                      //
+        (1 - xi - eta) * (1 - 2 * xi - 2 * eta),  //
+        4 * xi * eta,                             //
+        4 * eta * (1 - xi - eta),                 //
+        4 * xi * (1 - xi - eta),                  //
+    };
+  }
+
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &) override {
+    MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 3>();
+    // 1st row
+    // dN(i) / dXi
+    dshape(0, 0) = -1.;
+    dshape(0, 1) = 1.;
+    dshape(0, 2) = .0;
+
+    // 2nd row
+    // dN(i) / dEta
+    dshape(1, 0) = -1.;
+    dshape(1, 1) = .0;
+    dshape(1, 2) = 1.;
+
+    return dshape;
+  }
+};
+
+class RectangleElement : public Element<2> {
+ public:
+  RectangleElement() : Element<2>(4, 1) {}
+
+  [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
+    static const Precision ip_offset = std::sqrt(3) / 3;
+    static const std::vector<std::vector<Precision>> integration_points{
+        {-ip_offset, -ip_offset},
+        {ip_offset, -ip_offset},
+        {-ip_offset, ip_offset},
+        {ip_offset, ip_offset},
+    };
+    return integration_points;
+  };
+
+  [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
+    const Precision eta = ip[0];
+    const Precision xi = ip[1];
+
+    // define shape functions
+    return {
+        (1 - eta) * (1 - xi) / 4,
+        (1 + eta) * (1 - xi) / 4,
+        (1 + eta) * (1 + xi) / 4,
+        (1 - eta) * (1 + xi) / 4,
+    };
+  }
+
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override {
+    MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 4>();
+
+    const Precision eta = ip[0];
+    const Precision xi = ip[1];
+
+    // 1st row
+    // dN(i) / dXi
+    dshape(0, 0) = (eta - 1.) / 4;
+    dshape(0, 1) = (eta - 1.) / 4;
+    dshape(0, 2) = (eta + 1.) / 4;
+    dshape(0, 3) = (-eta - 1.) / 4;
+
+    // 2nd row
+    // dN(i) / dEta
+    dshape(1, 0) = (xi - 1.) / 4;
+    dshape(1, 1) = (-xi - 1.) / 4;
+    dshape(1, 2) = (xi + 1.) / 4;
+    dshape(1, 3) = (xi - 1.) / 4;
+
+    return dshape;
   }
 };
 
