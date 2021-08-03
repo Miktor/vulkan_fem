@@ -3,6 +3,7 @@
 void FEMApplication::PreInit() {
   solver_ = std::make_shared<vulkan_fem::Solver<2>>();
   model_ = vulkan_fem::ModelFactory::CreateRectangle2();
+  render_model_ = std::make_shared<vulkan_fem::VulkanModel<2>>(model_);
 }
 
 bool FEMApplication::ProcessInput(GLFWindow *window, int key, int scancode, int action, int mods) {
@@ -18,31 +19,21 @@ bool FEMApplication::ProcessInput(GLFWindow *window, int key, int scancode, int 
 
   return true;
 }
-std::vector<Vertex> FEMApplication::ToVertices(const std::vector<vulkan_fem::Vertex3> &data) {
-  std::vector<Vertex> result;
-  result.reserve(data.size());
 
-  for (const auto &input : data) {
-    Vertex vertex{};
-    vertex.pos_ = {input.x_, input.y_};
-    result.push_back(vertex);
-  }
-
-  return result;
-}
 void FEMApplication::CrateBuffers() {
-  indices_ = model_->GetIndices();
-  const auto vertices = ToVertices(model_->GetVertices());
+  indices_ = render_model_->GetIndices();
+  const auto vertices = render_model_->GetVertices();
 
   CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices_);
   CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertices);
 }
+
 void FEMApplication::PreDrawFrame(uint32_t /*image_index*/) {
   if (!needs_update_) {
     return;
   }
 
-  const auto vertexes = ToVertices(model_->GetVertices());
+  const auto vertexes = render_model_->GetVertices();
   VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
 
   VkBuffer staging_buffer;
@@ -62,6 +53,7 @@ void FEMApplication::PreDrawFrame(uint32_t /*image_index*/) {
 
   needs_update_ = false;
 }
+
 void FEMApplication::DrawRenderPass(VkCommandBuffer command_buffers) {
   VkBuffer vertex_buffers[] = {vertex_buffer_};
   VkDeviceSize offsets[] = {0};
@@ -71,6 +63,7 @@ void FEMApplication::DrawRenderPass(VkCommandBuffer command_buffers) {
 
   vkCmdDrawIndexed(command_buffers, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
 }
+
 void FEMApplication::Cleanup() {
   vkDestroyBuffer(device_, index_buffer_, nullptr);
   vkFreeMemory(device_, index_buffer_memory_, nullptr);

@@ -3,6 +3,7 @@
 #include "model_factory.h"
 #include "solver.h"
 #include "vulcan.h"
+#include "vulkan_model.h"
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -20,6 +21,7 @@ class FEMApplication final : public Application {
 
   std::shared_ptr<vulkan_fem::Solver<2>> solver_;
   std::shared_ptr<vulkan_fem::Model<2>> model_;
+  std::shared_ptr<vulkan_fem::VulkanModel<2>> render_model_;
 
   bool needs_update_ = false;
 
