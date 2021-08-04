@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model.h"
+#include "vulcan.h"
 
 namespace vulkan_fem {
 
