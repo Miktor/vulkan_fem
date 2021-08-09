@@ -10,11 +10,7 @@
 
 namespace vulkan_fem {
 
-struct Vertex3 {
-  Precision x_;
-  Precision y_;
-  Precision z_;
-};
+using Vertex3 = Eigen::Matrix<Precision, 3, 1>;
 
 struct Constraint {
   enum Type { kUx = 1 << 0, kUy = 1 << 1, kUz = 1 << 2, kUxy = kUx | kUy, kUxz = kUx | kUz, kUyz = kUy | kUz, kUxyz = kUx | kUy | kUz };
@@ -72,13 +68,9 @@ class Model {
       for (int i = 0; i < DIM; ++i) {
         switch (i) {
           case 0:
-            elements_[current].x_ += displacements[c + i] * 50.0;
-            break;
           case 1:
-            elements_[current].y_ += displacements[c + i] * 50.0;
-            break;
           case 2:
-            elements_[current].z_ += displacements[c + i] * 50.0;
+            elements_[current][i] += displacements[c + i] * 50.0;
             break;
           default:
             throw std::runtime_error("Invalid dims");
@@ -108,10 +100,8 @@ class Model {
         const uint16_t sub_element_index = element_inidices_[index + sub_index];
         const Vertex3 &sub_element_vertex = elements_[sub_element_index];
 
-        if (DIM == 2) {
-          elem_transform.row(sub_index) << sub_element_vertex.x_, sub_element_vertex.y_;
-        } else if (DIM == 3) {
-          elem_transform.row(sub_index) << sub_element_vertex.x_, sub_element_vertex.y_, sub_element_vertex.z_;
+        for (int i = 0; i < DIM; ++i) {
+          elem_transform.row(sub_index)[i] = sub_element_vertex[i];
         }
       }
 
@@ -250,10 +240,6 @@ class Model {
 }  // namespace vulkan_fem
 
 namespace std {
-template <typename T>
-T &operator<<(T &os, const vulkan_fem::Vertex3 &data) {
-  return os << data.x_ << ", " << data.y_ << ", " << data.z_;
-}
 
 template <typename T, typename V>
 T &operator<<(T &os, const std::vector<V> &data) {

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "fem.h"
-
 #define USE_MATH_DEFINES
+#include "fem.h"
 #include "model.h"
 #include <cmath>
+#include <tuple>
 
 namespace vulkan_fem {
 
@@ -62,7 +62,48 @@ class ModelFactory {
   //}
 
  private:
-  static void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> & vertices, std::vector<uint16_t> & indices) {
+  enum ElementType { Triangle, Rectangle };
+
+  static auto Convert2dMesh(const ElementType type, const uint8_t order, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
+    std::vector<Vertex3> res_vertices;
+    std::vector<uint16_t> res_indices;
+
+    switch (type) {
+      case ElementType::Triangle:
+        res_vertices = vertices;
+        res_indices.reserve(indices.size() / 4 * 6);
+        for (auto it = indices.begin(); it != indices.end(); it += 4) {
+          res_indices.insert(res_indices.end(), it, it + 3);
+          res_indices.push_back(*(it + 2));
+          res_indices.push_back(*(it + 3));
+          res_indices.push_back(*it);
+        }
+        break;
+      case ElementType::Rectangle:
+        res_vertices = vertices;
+        res_indices = indices;
+        break;
+    }
+
+    switch (order) {
+      case 1:
+        break;
+      case 2:
+        res_vertices.reserve(res_vertices.size() * 2);
+        for (auto it = res_indices.begin() + 1; it != res_indices.end(); ++it) {
+          auto b = it - 1;
+          auto e = it;
+
+          auto x = res_vertices[*e] - res_vertices[*b];
+          res_vertices.push_back(x);
+        }
+        break;
+    }
+
+    return std::make_tuple(std::move(res_vertices), std::move(res_indices));
+  }
+
+  static void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     static const uint32_t kSides = 5;
     static const uint32_t kRings = 6;
 
@@ -118,7 +159,7 @@ class ModelFactory {
   }
 
   static void GenerateEndCapVertexData(const uint32_t sides, Precision r, Precision y, uint16_t &index, uint16_t &el_index,
-                                       std::vector<Vertex3> & vertices, std::vector<uint16_t> & indices) {
+                                       std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     // Make a note of the vertex index for the center of the end cap
     const uint16_t end_cap_start_index = index;
 

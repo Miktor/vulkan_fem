@@ -23,7 +23,7 @@ class VulkanModel {
 
     for (const auto &input : data) {
       Vertex vertex{};
-      vertex.pos_ = {input.x_, input.y_};
+      vertex.pos_ = {input[0], input[1]};
       result.push_back(vertex);
     }
 
