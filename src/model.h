@@ -48,10 +48,7 @@ class Model {
         elements_(std::move(vertices)),
         element_inidices_(std::move(indices)),
         constraints_(std::move(constraints)),
-        loads_(BuildLoadsVector(loads)) {
-    std::cout << "elements_: " << elements_ << std::endl;
-    std::cout << "element_inidices_: " << element_inidices_ << std::endl;
-  }
+        loads_(BuildLoadsVector(loads)) {}
 
   [[nodiscard]] const std::vector<Vertex3> &GetVertices() const { return elements_; }
 
@@ -97,14 +94,14 @@ class Model {
 
     // const uint32_t order = element_type_->GetOrder();
 
-    MatrixFixedCols<DIM> elem_transform(element_count, DIM);
-    elem_transform.setZero();
-    std::vector<Precision> jacobian_determinants;
-
     using T = Eigen::Triplet<Precision>;
     std::vector<T> triplets;
     triplets.reserve(element_count * element_count * number_of_elements);
 
+    const auto d_matrix = material_.GetStiffnessMatrix();
+
+    MatrixFixedCols<DIM> elem_transform(element_count, DIM);
+    elem_transform.setZero();
     for (uint32_t index = 0; index < element_inidices_.size();) {
       // put all vertex transforms into matrix
       for (uint16_t sub_index = 0; sub_index < element_count && index + sub_index < element_inidices_.size(); ++sub_index) {
@@ -118,16 +115,16 @@ class Model {
         }
       }
 
-      jacobian_determinants.clear();
-      const auto elem_matrix = CalcElementMatrix(element_type_, elem_transform, jacobian_determinants);
-      const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
+      Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> element_stiffness_matrix;
+      element_stiffness_matrix.setZero(element_count * DIM, element_count * DIM);
+      for (const auto &[elem_matrix, w, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
+        const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
 
-      const auto d_matrix = material_.GetStiffnessMatrix();
+        element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * w / 2.;
+        std::cout << "B: " << b_matrix << std::endl;
+      }
 
-      const auto element_stiffnes_matrix = b_matrix.transpose() * d_matrix * b_matrix * jacobian_determinants.front() / 2.;
-
-      std::cout << "K: " << element_stiffnes_matrix << std::endl;
-      std::cout << "B: " << b_matrix << std::endl;
+      std::cout << "K: " << element_stiffness_matrix << std::endl;
 
       for (uint32_t i = 0; i < element_count; ++i) {
         for (uint32_t j = 0; j < element_count; ++j) {
@@ -135,12 +132,12 @@ class Model {
           const uint16_t global_index_j = element_inidices_[index + j];
 
           // x coords
-          triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 0, element_stiffnes_matrix(DIM * i + 0, DIM * j + 0));
-          triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 1, element_stiffnes_matrix(DIM * i + 0, DIM * j + 1));
+          triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 0, element_stiffness_matrix(DIM * i + 0, DIM * j + 0));
+          triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 1, element_stiffness_matrix(DIM * i + 0, DIM * j + 1));
 
           // y coords
-          triplets.emplace_back(DIM * global_index_i + 1, 2 * global_index_j + 0, element_stiffnes_matrix(DIM * i + 1, DIM * j + 0));
-          triplets.emplace_back(DIM * global_index_i + 1, 2 * global_index_j + 1, element_stiffnes_matrix(DIM * i + 1, DIM * j + 1));
+          triplets.emplace_back(DIM * global_index_i + 1, 2 * global_index_j + 0, element_stiffness_matrix(DIM * i + 1, DIM * j + 0));
+          triplets.emplace_back(DIM * global_index_i + 1, 2 * global_index_j + 1, element_stiffness_matrix(DIM * i + 1, DIM * j + 1));
         }
       }
 
@@ -201,14 +198,12 @@ class Model {
   // [ Ni 0
   // [ 0  Ni
   // [ Ni Ni
-  MatrixFixedRows<DIM> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type, const MatrixFixedCols<DIM> &elem_transform,
-                                         std::vector<Precision> &jacobian_determinants) {
-    MatrixFixedRows<DIM> element_matrix = MatrixFixedRows<DIM>::Zero(DIM, element_type->GetElementCount());
-    const auto integration_points = element_type->GetIntegrationPoints();
-    jacobian_determinants.reserve(integration_points.size());
+  std::vector<std::tuple<MatrixFixedRows<DIM>, Precision>> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type,
+                                                                             const MatrixFixedCols<DIM> &elem_transform) {
+    std::vector<std::tuple<MatrixFixedRows<DIM>, Precision>> result;
 
-    for (const auto &ip : integration_points) {
-      auto dshape = element_type->CalcDShape(ip);
+    for (const auto &ip : element_type->GetIntegrationPoints()) {
+      const auto dshape = element_type->CalcDShape(ip);
 
       // build jacobian (d(x, y, z)/d(xi, eta, zeta))
       const MatrixDim<DIM> jacobian = dshape * elem_transform;
@@ -216,11 +211,11 @@ class Model {
       const MatrixDim<DIM> inverse_jacobian = jacobian.inverse();
 
       // element matrix
-      element_matrix += inverse_jacobian * dshape;
-      jacobian_determinants.push_back(jacobian_det);
+      const auto element_matrix = inverse_jacobian * dshape;
+      result.push_back(std::make_tuple(element_matrix, jacobian_det));
     }
 
-    return element_matrix;
+    return result;
   }
 
   // B matrix

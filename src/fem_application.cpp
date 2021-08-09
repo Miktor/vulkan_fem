@@ -11,12 +11,25 @@ bool FEMApplication::ProcessInput(GLFWindow *window, int key, int scancode, int 
     return false;
   }
 
-  if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-    solver_->Solve(*model_);
-    needs_update_ = true;
-    return false;
+  if (action == GLFW_PRESS) {
+    switch (key) {
+      case GLFW_KEY_SPACE:
+        solver_->Solve(*model_);
+        needs_update_ = true;
+        return false;
+      case GLFW_KEY_1:
+        model_ = vulkan_fem::ModelFactory::CreateRectangle();
+        render_model_ = std::make_shared<vulkan_fem::VulkanModel<2>>(model_);
+        needs_update_ = true;
+        return false;
+      case GLFW_KEY_2:
+        model_ = vulkan_fem::ModelFactory::CreateRectangle2();
+        render_model_ = std::make_shared<vulkan_fem::VulkanModel<2>>(model_);
+        needs_update_ = true;
+        return false;
+    }
   }
-
+  
   return true;
 }
 

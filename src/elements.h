@@ -16,6 +16,7 @@ class Element {
   [[nodiscard]] uint32_t GetOrder() const { return order_; }
 
   [[nodiscard]] virtual std::vector<std::vector<Precision>> GetIntegrationPoints() const = 0;
+  [[nodiscard]] virtual Precision GetIntegrationWeight() const = 0;
 
   // calculate shape functions
   // ip - integration point
@@ -47,6 +48,8 @@ class TetrahedronElement : public Element<3> {
     static const std::vector<std::vector<Precision>> kIntegrationPoints{{0.25, 0.25, 0.25}};  // TODO(dmitrygladky): add correct IP
     return kIntegrationPoints;
   };
+
+  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -93,6 +96,8 @@ class TriangleElement : public Element<2> {
     return kIntegrationPoints;
   };
 
+  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
+
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
     const Precision eta = ip[1];
@@ -131,6 +136,8 @@ class TriangleElement2 : public Element<2> {
     };
     return kIntegrationPoints;
   };
+
+  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -179,6 +186,8 @@ class RectangleElement : public Element<2> {
     };
     return kIntegrationPoints;
   };
+
+  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];   // ξ
