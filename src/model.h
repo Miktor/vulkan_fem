@@ -117,10 +117,10 @@ class Model {
 
       Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> element_stiffness_matrix;
       element_stiffness_matrix.setZero(element_count * DIM, element_count * DIM);
-      for (const auto &[elem_matrix, w, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
+      for (const auto &[elem_matrix, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
         const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
 
-        element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * w / 2.;
+        element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * element_type_->GetIntegrationWeight() / 2.;
         std::cout << "B: " << b_matrix << std::endl;
       }
 
