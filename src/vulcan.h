@@ -85,6 +85,7 @@ class Application {
                     VkDeviceMemory &buffer_memory);
   void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
+  void CreateCommandBuffers();
  private:
   void InitWindow();
   void InitVulkan();
@@ -104,7 +105,6 @@ class Application {
   void CreateFramebuffers();
   void CreateCommandPool();
 
-  void CreateCommandBuffers();
   void CreateSyncObjects();
 
   void DrawFrame();

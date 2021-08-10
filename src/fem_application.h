@@ -34,6 +34,8 @@ class FEMApplication final : public Application {
 
   void CrateBuffers() final;
 
+  void UpdateBuffer(VkBuffer &buffer, const void *data, VkDeviceSize data_size);
+
   void PreDrawFrame(uint32_t /*image_index*/) final;
 
   void DrawRenderPass(VkCommandBuffer command_buffers) final;

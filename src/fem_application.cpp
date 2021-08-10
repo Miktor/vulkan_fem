@@ -29,7 +29,7 @@ bool FEMApplication::ProcessInput(GLFWindow *window, int key, int scancode, int 
         return false;
     }
   }
-  
+
   return true;
 }
 
@@ -47,22 +47,17 @@ void FEMApplication::PreDrawFrame(uint32_t /*image_index*/) {
   }
 
   const auto vertexes = render_model_->GetVertices();
-  VkDeviceSize buffer_size = sizeof(vertexes[0]) * vertexes.size();
+  const auto indices = render_model_->GetIndices();
 
-  VkBuffer staging_buffer;
-  VkDeviceMemory staging_buffer_memory;
-  CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-               staging_buffer, staging_buffer_memory);
+  vkDestroyBuffer(device_, index_buffer_, nullptr);
+  vkFreeMemory(device_, index_buffer_memory_, nullptr);
+  vkDestroyBuffer(device_, vertex_buffer_, nullptr);
+  vkFreeMemory(device_, vertex_buffer_memory_, nullptr);
 
-  void *data;
-  vkMapMemory(device_, staging_buffer_memory, 0, buffer_size, 0, &data);
-  memcpy(data, vertexes.data(), static_cast<size_t>(buffer_size));
-
-  vkUnmapMemory(device_, staging_buffer_memory);
-
-  CopyBuffer(staging_buffer, vertex_buffer_, buffer_size);
-  vkDestroyBuffer(device_, staging_buffer, nullptr);
-  vkFreeMemory(device_, staging_buffer_memory, nullptr);
+  CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertexes);
+  CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices);
+  
+  CreateCommandBuffers();
 
   needs_update_ = false;
 }

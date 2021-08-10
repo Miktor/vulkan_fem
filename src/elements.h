@@ -16,7 +16,7 @@ class Element {
   [[nodiscard]] uint32_t GetOrder() const { return order_; }
 
   [[nodiscard]] virtual std::vector<std::vector<Precision>> GetIntegrationPoints() const = 0;
-  [[nodiscard]] virtual Precision GetIntegrationWeight() const = 0;
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t p) const = 0;
 
   // calculate shape functions
   // ip - integration point
@@ -49,7 +49,7 @@ class TetrahedronElement : public Element<3> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -96,7 +96,7 @@ class TriangleElement : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 0.5; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -124,9 +124,9 @@ class TriangleElement : public Element<2> {
   }
 };
 
-class TriangleElement2 : public Element<2> {
+class Triangle2Element : public Element<2> {
  public:
-  TriangleElement2() : Element<2>(6, 1) {}
+  Triangle2Element() : Element<2>(6, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
     static const std::vector<std::vector<Precision>> kIntegrationPoints{
@@ -137,7 +137,7 @@ class TriangleElement2 : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -177,7 +177,7 @@ class RectangleElement : public Element<2> {
   RectangleElement() : Element<2>(4, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const Precision kIpOffset = std::sqrt(3) / 3;
+    static const Precision kIpOffset = 1. / 3. / std::sqrt(3);
     static const std::vector<std::vector<Precision>> kIntegrationPoints{
         {-kIpOffset, -kIpOffset},
         {kIpOffset, -kIpOffset},
@@ -187,7 +187,7 @@ class RectangleElement : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight() const override { return 1.; }
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];   // ξ
@@ -221,6 +221,88 @@ class RectangleElement : public Element<2> {
     dshape(1, 1) = (-xi - 1.) / 4;
     dshape(1, 2) = (xi + 1.) / 4;
     dshape(1, 3) = (1 - xi) / 4;
+
+    return dshape;
+  }
+};
+
+class Rectangle2Element : public Element<2> {
+ public:
+  Rectangle2Element() : Element<2>(8, 1) {}
+
+  [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
+    static const Precision kIpOffset = std::sqrt(3. / 5.);
+    static const std::vector<std::vector<Precision>> kIntegrationPoints{
+        {-kIpOffset, -kIpOffset},  //
+        {-kIpOffset, 0.},          //
+        {-kIpOffset, kIpOffset},   //
+        {0., -kIpOffset},          //
+        {0., 0.},                  //
+        {0., kIpOffset},           //
+        {kIpOffset, -kIpOffset},   //
+        {kIpOffset, 0.},           //
+        {kIpOffset, kIpOffset},    //
+    };
+    return kIntegrationPoints;
+  };
+
+  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t p) const override {
+    constexpr Precision kA = 5. / 9.;
+    constexpr Precision kB = 8. / 9.;
+    constexpr Precision kASqr = kA * kA;
+    constexpr Precision kBSqr = kB * kB;
+    constexpr Precision kAB = kA * kB;
+
+    constexpr Precision kW[9] = {kASqr, kAB, kASqr, kAB, kBSqr, kAB, kASqr, kAB, kASqr};
+
+    return kW[p];
+  }
+
+  [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
+    const Precision xi = ip[0];   // ξ
+    const Precision eta = ip[1];  // η
+
+    // define shape functions
+    return {
+        (1 - xi) * (1 - eta) * (-xi - eta - 1) / 2,  //
+        (1 + xi) * (1 - eta) * (xi - eta - 1) / 2,   //
+        (1 + xi) * (1 + eta) * (xi + eta - 1) / 2,   //
+        (1 - xi) * (1 + eta) * (-xi + eta - 1) / 2,  //
+        (1 - eta) * (1 + xi) * (1 - xi) / 2,         //
+        (1 + xi) * (1 + eta) * (1 - eta) / 2,        //
+        (1 + eta) * (1 + xi) * (1 - xi) / 2,         //
+        (1 - xi) * (1 + eta) * (1 - eta) / 2,        //
+    };
+  }
+
+  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override {
+    MatrixFixedRows<2, Precision> dshape = Eigen::Matrix<Precision, 2, 8>();
+
+    const Precision xi = ip[0];   // ξ
+    const Precision eta = ip[1];  // η
+
+    // 1st row
+    // dN(i) / dXi
+
+    dshape(0, 0) = -(-1 + eta) * (eta + 2 * xi) / 4;
+    dshape(0, 1) = (-1 + eta) * (eta - 2 * xi) / 4;
+    dshape(0, 2) = (1 + eta) * (eta + 2 * xi) / 4;
+    dshape(0, 3) = -(1 + eta) * (eta - 2 * xi) / 4;
+    dshape(0, 4) = (-1 + eta) * xi;
+    dshape(0, 5) = -(-1 + eta) * (1 + eta) / 2;
+    dshape(0, 6) = -(1 + eta) * xi;
+    dshape(0, 7) = (-1 + eta) * (1 + eta) / 2;
+
+    // 2nd row
+    // dN(i) / dEta
+    dshape(1, 0) = -(-1 + xi) * (2 * eta + xi) / 4;
+    dshape(1, 1) = (2 * eta - xi) * (1 + xi) / 4;
+    dshape(1, 2) = (1 + xi) * (2 * eta + xi) / 4;
+    dshape(1, 3) = -(2 * eta - xi) * (-1 + xi) / 4;
+    dshape(1, 4) = (-1 + xi) * (1 + xi) / 2;
+    dshape(1, 5) = -eta * (1 + xi);
+    dshape(1, 6) = -(-1 + xi) * (1 + xi) / 2;
+    dshape(1, 7) = eta * (-1 + xi);
 
     return dshape;
   }

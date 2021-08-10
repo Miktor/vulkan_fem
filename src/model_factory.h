@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #define USE_MATH_DEFINES
 #include "fem.h"
 #include "model.h"
@@ -9,6 +10,50 @@
 namespace vulkan_fem {
 
 class ModelFactory {
+ private:
+  static auto Convert2dMesh(uint8_t elem_size, uint8_t order, std::vector<Vertex3> vertices, std::vector<uint16_t> indices) {
+    switch (order) {
+      case 1:
+        return std::make_tuple(vertices, indices);
+      case 2: {
+        std::vector<Vertex3> res_vertices;
+        std::vector<uint16_t> res_indices;
+        res_vertices.reserve(vertices.size() * 2);
+        res_indices.reserve(indices.size() * 2);
+
+        int32_t min_ind = -1;
+
+        for (auto it = indices.begin(); it != indices.end(); it += elem_size) {
+          for (auto v_it = it; v_it - it < elem_size; ++v_it) {
+            res_indices.push_back(*v_it);
+            if (*v_it > min_ind) {
+              res_vertices.push_back(vertices[*v_it]);
+            }
+            min_ind = std::max<int32_t>(min_ind, *v_it);
+          }
+
+          for (auto e_it = it + 1; e_it - it < elem_size; ++e_it) {
+            auto b = e_it - 1;
+            auto e = e_it;
+
+            auto x = (vertices[*e] + vertices[*b]) / 2;
+            res_vertices.emplace_back(x);
+            res_indices.push_back(res_vertices.size() - 1);
+          }
+
+          auto b = it + (elem_size - 1);
+          auto e = it;
+          auto x = (vertices[*e] + vertices[*b]) / 2;
+          res_vertices.emplace_back(x);
+          res_indices.push_back(res_vertices.size() - 1);
+        }
+        return std::make_tuple(res_vertices, res_indices);
+      }
+      default:
+        throw std::runtime_error("unsuported order");
+    }
+  }
+
  public:
   static constexpr Precision kTwoPi = static_cast<Precision>(2.) * static_cast<Precision>(M_PI);
 
@@ -22,9 +67,11 @@ class ModelFactory {
     std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
     std::vector<Constraint> constraints = {{0, Constraint::kUxy}, {1, Constraint::kUxy}};
-    std::vector<Load<2>> loads = {{2, {1.0, 1.0}}};
+    std::vector<Load<2>> loads = {{2, {50.0, 50.0}}};
 
-    return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(), vertices, indices, constraints, loads, 0.2e4,
+    const auto &[v, i] = Convert2dMesh(3, 2, vertices, indices);
+
+    return std::make_shared<Model<2>>(std::make_shared<Triangle2Element>(), v, i, constraints, loads, 0.2e4,
                                       0.3);  // 200GPa, 0.3 Young, Poisson's for steel
   }
 
@@ -38,9 +85,10 @@ class ModelFactory {
     std::vector<uint16_t> indices = {0, 1, 2, 3};
 
     std::vector<Constraint> constraints = {{0, Constraint::kUxy}, {1, Constraint::kUxy}};
-    std::vector<Load<2>> loads = {{2, {1.0, 1.0}}};
+    std::vector<Load<2>> loads = {{2, {50.0, 50.0}}};
 
-    return std::make_shared<Model<2>>(std::make_shared<RectangleElement>(), vertices, indices, constraints, loads, 0.2e4,
+    const auto &[v, i] = Convert2dMesh(4, 2, vertices, indices);
+    return std::make_shared<Model<2>>(std::make_shared<Rectangle2Element>(), v, i, constraints, loads, 0.2e4,
                                       0.3);  // 200GPa, 0.3 Young, Poisson's for steel
   }
 
@@ -62,47 +110,6 @@ class ModelFactory {
   //}
 
  private:
-  enum ElementType { Triangle, Rectangle };
-
-  static auto Convert2dMesh(const ElementType type, const uint8_t order, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
-    std::vector<Vertex3> res_vertices;
-    std::vector<uint16_t> res_indices;
-
-    switch (type) {
-      case ElementType::Triangle:
-        res_vertices = vertices;
-        res_indices.reserve(indices.size() / 4 * 6);
-        for (auto it = indices.begin(); it != indices.end(); it += 4) {
-          res_indices.insert(res_indices.end(), it, it + 3);
-          res_indices.push_back(*(it + 2));
-          res_indices.push_back(*(it + 3));
-          res_indices.push_back(*it);
-        }
-        break;
-      case ElementType::Rectangle:
-        res_vertices = vertices;
-        res_indices = indices;
-        break;
-    }
-
-    switch (order) {
-      case 1:
-        break;
-      case 2:
-        res_vertices.reserve(res_vertices.size() * 2);
-        for (auto it = res_indices.begin() + 1; it != res_indices.end(); ++it) {
-          auto b = it - 1;
-          auto e = it;
-
-          auto x = res_vertices[*e] - res_vertices[*b];
-          res_vertices.push_back(x);
-        }
-        break;
-    }
-
-    return std::make_tuple(std::move(res_vertices), std::move(res_indices));
-  }
-
   static void GenerateCylinder(Precision r, Precision h, std::vector<Vertex3> &vertices, std::vector<uint16_t> &indices) {
     static const uint32_t kSides = 5;
     static const uint32_t kRings = 6;

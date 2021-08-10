@@ -1,13 +1,13 @@
 #pragma once
 
 #include "elements.h"
+#include "enumerate.h"
 #include "fem.h"
 #include "material.h"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-
 namespace vulkan_fem {
 
 using Vertex3 = Eigen::Matrix<Precision, 3, 1>;
@@ -70,7 +70,7 @@ class Model {
           case 0:
           case 1:
           case 2:
-            elements_[current][i] += displacements[c + i] * 50.0;
+            elements_[current][i] += displacements[c + i];
             break;
           default:
             throw std::runtime_error("Invalid dims");
@@ -105,12 +105,13 @@ class Model {
         }
       }
 
+      std::cout << "elem_transform: " << elem_transform << std::endl;
       Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> element_stiffness_matrix;
       element_stiffness_matrix.setZero(element_count * DIM, element_count * DIM);
-      for (const auto &[elem_matrix, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
+      for (const auto &[elem_matrix, w, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
         const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
 
-        element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * element_type_->GetIntegrationWeight() / 2.;
+        element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * w;
         std::cout << "B: " << b_matrix << std::endl;
       }
 
@@ -188,11 +189,11 @@ class Model {
   // [ Ni 0
   // [ 0  Ni
   // [ Ni Ni
-  std::vector<std::tuple<MatrixFixedRows<DIM>, Precision>> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type,
-                                                                             const MatrixFixedCols<DIM> &elem_transform) {
-    std::vector<std::tuple<MatrixFixedRows<DIM>, Precision>> result;
+  std::vector<std::tuple<MatrixFixedRows<DIM>, Precision, Precision>> CalcElementMatrix(std::shared_ptr<Element<DIM>> element_type,
+                                                                                        const MatrixFixedCols<DIM> &elem_transform) {
+    std::vector<std::tuple<MatrixFixedRows<DIM>, Precision, Precision>> result;
 
-    for (const auto &ip : element_type->GetIntegrationPoints()) {
+    for (const auto &[i, ip] : enumerate(element_type->GetIntegrationPoints())) {
       const auto dshape = element_type->CalcDShape(ip);
 
       // build jacobian (d(x, y, z)/d(xi, eta, zeta))
@@ -202,7 +203,7 @@ class Model {
 
       // element matrix
       const auto element_matrix = inverse_jacobian * dshape;
-      result.push_back(std::make_tuple(element_matrix, jacobian_det));
+      result.push_back(std::make_tuple(element_matrix, element_type->GetIntegrationWeight(i), jacobian_det));
     }
 
     return result;

@@ -20,10 +20,10 @@ class VulkanModel {
   static std::vector<Vertex> ToVertices(const std::vector<vulkan_fem::Vertex3> &data) {
     std::vector<Vertex> result;
     result.reserve(data.size());
-
-    for (const auto &input : data) {
+    
+    for (int i = 0; i < data.size(); ++i) {
       Vertex vertex{};
-      vertex.pos_ = {input[0], input[1]};
+      vertex.pos_ = {data[i][0], data[i][1]};
       result.push_back(vertex);
     }
 
@@ -31,21 +31,48 @@ class VulkanModel {
   }
 
   std::vector<uint16_t> ToIndices(const std::vector<uint16_t> &data) const {
-    if (model_->GetElementType()->GetElementCount() == 4)  // rect
-    {
-      std::vector<uint16_t> result;
-      result.reserve(data.size() / 4 * 6);
+    switch (model_->GetElementType()->GetElementCount()) {
+      case 4: {
+        std::vector<uint16_t> result;
+        result.reserve(data.size() / 4 * 6);
 
-      for (int i = 0; i < data.size(); ++i) {
-        if (i % 4 == 3) {
-          result.push_back(data[i - 1]);
-          result.push_back(data[i]);
-          result.push_back(data[i - 3]);
-        } else {
-          result.push_back(data[i]);
+        for (int i = 0; i < data.size(); ++i) {
+          if (i % 4 == 3) {
+            result.push_back(data[i - 1]);
+            result.push_back(data[i]);
+            result.push_back(data[i - 3]);
+          } else {
+            result.push_back(data[i]);
+          }
         }
+        return result;
       }
-      return result;
+      case 6: {
+        std::vector<uint16_t> result;
+        result.reserve(data.size() / 2);
+
+        for (int i = 0; i < data.size(); ++i) {
+          if (i % 6 < 3) {
+            result.push_back(data[i]);
+          }
+        }
+        return result;
+      }
+      case 8: {
+        std::vector<uint16_t> result;
+        result.reserve(data.size() / 8 * 6);
+
+        for (int i = 0; i < data.size(); ++i) {
+          if (i % 8 == 3) {
+            result.push_back(data[i - 1]);
+            result.push_back(data[i]);
+            result.push_back(data[i - 3]);
+          } else if (i < 4) {
+            result.push_back(data[i]);
+          }
+        }
+        return result;
+      }
     }
     return data;
   }
