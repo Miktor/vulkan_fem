@@ -35,9 +35,9 @@ Checks: >
   -bugprone-narrowing-conversions
   
 # Turn all the warnings from the checks above into errors.
-WarningsAsErrors: "*"
+WarningsAsErrors: '*'
 
-HeaderFilterRegex: ".*/vulkan_fem/.*"
+HeaderFilterRegex: '.*\/vulkan_fem\/.*'
 
 
 CheckOptions:
