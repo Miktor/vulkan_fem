@@ -12,10 +12,10 @@
 
 class FEMApplication final : public Application {
  private:
-  VkBuffer vertex_buffer_;
-  VkDeviceMemory vertex_buffer_memory_;
-  VkBuffer index_buffer_;
-  VkDeviceMemory index_buffer_memory_;
+  VkBuffer vertex_buffer_{VK_NULL_HANDLE};
+  VkDeviceMemory vertex_buffer_memory_{VK_NULL_HANDLE};
+  VkBuffer index_buffer_{VK_NULL_HANDLE};
+  VkDeviceMemory index_buffer_memory_{VK_NULL_HANDLE};
 
   std::vector<uint16_t> indices_;
 

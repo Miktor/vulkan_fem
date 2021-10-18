@@ -20,7 +20,7 @@ struct QueueFamilyIndices {
 };
 
 struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR capabilities_;
+  VkSurfaceCapabilitiesKHR capabilities_{};
   std::vector<VkSurfaceFormatKHR> formats_;
   std::vector<VkPresentModeKHR> present_modes_;
 };
@@ -54,7 +54,7 @@ class Application {
   VkSwapchainKHR swap_chain_ = VK_NULL_HANDLE;
   std::vector<VkImage> swap_chain_images_;
   VkFormat swap_chain_image_format_ = VkFormat::VK_FORMAT_UNDEFINED;
-  VkExtent2D swap_chain_extent_;
+  VkExtent2D swap_chain_extent_{};
   std::vector<VkImageView> swap_chain_image_views_;
   std::vector<VkFramebuffer> swap_chain_framebuffers_;
 
@@ -86,6 +86,7 @@ class Application {
   void CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
   void CreateCommandBuffers();
+
  private:
   void InitWindow();
   void InitVulkan();

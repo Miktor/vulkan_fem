@@ -11,7 +11,7 @@ class VulkanModel {
   std::shared_ptr<Model<DIM>> model_;
 
  public:
-  VulkanModel(std::shared_ptr<Model<DIM>> model) : model_(model) {}
+  explicit VulkanModel(std::shared_ptr<Model<DIM>> model) : model_(model) {}
 
   [[nodiscard]] std::vector<Vertex> GetVertices() const { return ToVertices(model_->GetVertices()); }
   [[nodiscard]] std::vector<uint16_t> GetIndices() const { return ToIndices(model_->GetIndices()); }
@@ -21,16 +21,16 @@ class VulkanModel {
     std::vector<Vertex> result;
     result.reserve(data.size());
     
-    for (int i = 0; i < data.size(); ++i) {
+    for (const auto & i : data) {
       Vertex vertex{};
-      vertex.pos_ = {data[i][0], data[i][1]};
+      vertex.pos_ = {i[0], i[1]};
       result.push_back(vertex);
     }
 
     return result;
   }
 
-  std::vector<uint16_t> ToIndices(const std::vector<uint16_t> &data) const {
+  [[nodiscard]] std::vector<uint16_t> ToIndices(const std::vector<uint16_t> &data) const {
     switch (model_->GetElementType()->GetElementCount()) {
       case 4: {
         std::vector<uint16_t> result;

@@ -53,9 +53,9 @@ class Model {
 
   [[nodiscard]] const std::vector<uint16_t> &GetIndices() const { return element_indices_; }
 
-  Eigen::VectorXf GetLoads() const { return loads_; }
+  [[nodiscard]] Eigen::VectorXf GetLoads() const { return loads_; }
 
-  std::shared_ptr<Element<DIM>> GetElementType() const { return element_type_; }
+  [[nodiscard]] std::shared_ptr<Element<DIM>> GetElementType() const { return element_type_; }
 
   void AccountDisplacements(const Eigen::VectorXf &displacements) {
     if (displacements.size() / DIM != elements_.size()) {
@@ -197,7 +197,7 @@ class Model {
                                                                                         const MatrixFixedCols<DIM> &elem_transform) {
     std::vector<std::tuple<MatrixFixedRows<DIM>, Precision, Precision>> result;
 
-    for (const auto &[i, ip] : enumerate(element_type->GetIntegrationPoints())) {
+    for (const auto &[i, ip] : Enumerate(element_type->GetIntegrationPoints())) {
       const auto dshape = element_type->CalcDShape(ip);
 
       // build jacobian (d(x, y, z)/d(xi, eta, zeta))

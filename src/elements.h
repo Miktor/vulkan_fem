@@ -49,7 +49,7 @@ class TetrahedronElement : public Element<3> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
+  [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -96,7 +96,7 @@ class TriangleElement : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 0.5; }
+  [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 0.5; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -137,7 +137,7 @@ class Triangle2Element : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
+  [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];
@@ -187,7 +187,7 @@ class RectangleElement : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
+  [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override { return 1.; }
 
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override {
     const Precision xi = ip[0];   // ξ
@@ -246,7 +246,7 @@ class Rectangle2Element : public Element<2> {
     return kIntegrationPoints;
   };
 
-  [[nodiscard]] virtual Precision GetIntegrationWeight(uint8_t p) const override {
+  [[nodiscard]] Precision GetIntegrationWeight(uint8_t p) const override {
     constexpr Precision kA = 5. / 9.;
     constexpr Precision kB = 8. / 9.;
     constexpr Precision kASqr = kA * kA;
