@@ -4,10 +4,13 @@
 #include "enumerate.h"
 #include "fem.h"
 #include "material.h"
+#include "spdlog/fmt/ostr.h"
+#include <spdlog/spdlog.h>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
 namespace vulkan_fem {
 
 using Vertex3 = Eigen::Matrix<Precision, 3, 1>;
@@ -42,13 +45,13 @@ class Model {
       : element_type_(std::move(element_type)),
         material_(e, mu),
         elements_(std::move(vertices)),
-        element_inidices_(std::move(indices)),
+        element_indices_(std::move(indices)),
         constraints_(std::move(constraints)),
         loads_(BuildLoadsVector(loads)) {}
 
   [[nodiscard]] const std::vector<Vertex3> &GetVertices() const { return elements_; }
 
-  [[nodiscard]] const std::vector<uint16_t> &GetIndices() const { return element_inidices_; }
+  [[nodiscard]] const std::vector<uint16_t> &GetIndices() const { return element_indices_; }
 
   Eigen::VectorXf GetLoads() const { return loads_; }
 
@@ -80,9 +83,9 @@ class Model {
     }
   }
 
-  ElementMatrix BuildGlobalStiffnesMatrix() {
+  ElementMatrix BuildGlobalStiffnessMatrix() {
     const uint32_t element_count = element_type_->GetElementCount();
-    const uint32_t number_of_elements = element_inidices_.size() / element_count;
+    const uint32_t number_of_elements = element_indices_.size() / element_count;
 
     // const uint32_t order = element_type_->GetOrder();
 
@@ -91,13 +94,14 @@ class Model {
     triplets.reserve(element_count * element_count * number_of_elements);
 
     const auto d_matrix = material_.GetStiffnessMatrix();
+    spdlog::info("\\nD: {}", d_matrix);
 
     MatrixFixedCols<DIM> elem_transform(element_count, DIM);
     elem_transform.setZero();
-    for (uint32_t index = 0; index < element_inidices_.size();) {
+    for (uint32_t index = 0; index < element_indices_.size();) {
       // put all vertex transforms into matrix
-      for (uint16_t sub_index = 0; sub_index < element_count && index + sub_index < element_inidices_.size(); ++sub_index) {
-        const uint16_t sub_element_index = element_inidices_[index + sub_index];
+      for (uint16_t sub_index = 0; sub_index < element_count && index + sub_index < element_indices_.size(); ++sub_index) {
+        const uint16_t sub_element_index = element_indices_[index + sub_index];
         const Vertex3 &sub_element_vertex = elements_[sub_element_index];
 
         for (int i = 0; i < DIM; ++i) {
@@ -105,22 +109,22 @@ class Model {
         }
       }
 
-      std::cout << "elem_transform: " << elem_transform << std::endl;
+      spdlog::info("\nelem_transform: {}", elem_transform);
       Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> element_stiffness_matrix;
       element_stiffness_matrix.setZero(element_count * DIM, element_count * DIM);
       for (const auto &[elem_matrix, w, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
         const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
+        spdlog::info("\nB: {}", b_matrix);
 
         element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * w;
-        std::cout << "B: " << b_matrix << std::endl;
       }
 
-      std::cout << "K: " << element_stiffness_matrix << std::endl;
+      spdlog::info("\\nK: {}", element_stiffness_matrix);
 
       for (uint32_t i = 0; i < element_count; ++i) {
         for (uint32_t j = 0; j < element_count; ++j) {
-          const uint16_t global_index_i = element_inidices_[index + i];
-          const uint16_t global_index_j = element_inidices_[index + j];
+          const uint16_t global_index_i = element_indices_[index + i];
+          const uint16_t global_index_j = element_indices_[index + j];
 
           // x coords
           triplets.emplace_back(DIM * global_index_i + 0, DIM * global_index_j + 0, element_stiffness_matrix(DIM * i + 0, DIM * j + 0));
@@ -203,6 +207,13 @@ class Model {
 
       // element matrix
       const auto element_matrix = inverse_jacobian * dshape;
+
+      spdlog::info("\\ndshape: {}", dshape);
+      spdlog::info("\\nJac: {}", jacobian);
+      spdlog::info("\\nJDet: {}", jacobian_det);
+      spdlog::info("\\nInvJ: {}", inverse_jacobian);
+      spdlog::info("\\nE: {}", element_matrix);
+
       result.push_back(std::make_tuple(element_matrix, element_type->GetIntegrationWeight(i), jacobian_det));
     }
 
@@ -232,7 +243,7 @@ class Model {
 
   LinearMaterial<DIM> material_;
   std::vector<Vertex3> elements_;
-  std::vector<uint16_t> element_inidices_;
+  std::vector<uint16_t> element_indices_;
   std::vector<ElementTransformations<DIM>> element_transformations_;
   std::vector<Constraint> constraints_;
   Loads loads_;

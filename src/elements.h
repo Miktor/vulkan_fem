@@ -177,7 +177,7 @@ class RectangleElement : public Element<2> {
   RectangleElement() : Element<2>(4, 1) {}
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override {
-    static const Precision kIpOffset = 1. / 3. / std::sqrt(3);
+    static const Precision kIpOffset = 1. / std::sqrt(3);
     static const std::vector<std::vector<Precision>> kIntegrationPoints{
         {-kIpOffset, -kIpOffset},
         {kIpOffset, -kIpOffset},

@@ -1,10 +1,14 @@
 
 #include "fem_application.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 
 int main(const int /*argc*/, const char ** /*argv[]*/) {
+  spdlog::info("Start");
+
   FEMApplication app;
 
   try {
