@@ -108,7 +108,7 @@ void Application::InitVulkan() {
   CreateSwapChain();
   CreateImageViews();
   CreateRenderPass();
-  graphics_pipeline_ = CreateGraphicsPipeline(device_, swap_chain_extent_, pipeline_layout_, render_pass_, VK_POLYGON_MODE_FILL);
+  graphics_pipeline_ = CreateGraphicsPipeline(device_, swap_chain_extent_, pipeline_layout_, render_pass_, VK_POLYGON_MODE_LINE);
   CreateFramebuffers();
   CreateCommandPool();
   CrateBuffers();
@@ -484,7 +484,7 @@ VkPipeline Application::CreateGraphicsPipeline(VkDevice device, const VkExtent2D
   rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   rasterizer.depthClampEnable = VK_FALSE;
   rasterizer.rasterizerDiscardEnable = VK_FALSE;
-  rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+  rasterizer.polygonMode = mode;
   rasterizer.lineWidth = 1.0F;
   rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
   rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
