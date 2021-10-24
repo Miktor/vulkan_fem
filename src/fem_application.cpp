@@ -46,6 +46,8 @@ void FEMApplication::PreDrawFrame(uint32_t /*image_index*/) {
     return;
   }
 
+  SPDLOG_INFO("Updating");
+
   const auto vertexes = render_model_->GetVertices();
   const auto indices = render_model_->GetIndices();
 
@@ -56,7 +58,7 @@ void FEMApplication::PreDrawFrame(uint32_t /*image_index*/) {
 
   CreateVertexBuffer(vertex_buffer_, vertex_buffer_memory_, vertexes);
   CreateIndexBuffer(index_buffer_, index_buffer_memory_, indices);
-  
+
   CreateCommandBuffers();
 
   needs_update_ = false;
