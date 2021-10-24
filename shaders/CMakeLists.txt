@@ -23,11 +23,3 @@ add_custom_target(
     shaders_build
     DEPENDS ${SPIRV_BINARY_FILES}
     )
-
-add_custom_command(TARGET shaders_build POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/shaders/"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_BINARY_DIR}/shaders"
-        "$<TARGET_FILE_DIR:vulkan_fem>/shaders"
-        )

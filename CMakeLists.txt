@@ -57,6 +57,13 @@ target_link_libraries(vulkan_fem PRIVATE Eigen3::Eigen)
 target_link_libraries(vulkan_fem PRIVATE spdlog::spdlog)
 
 add_subdirectory(shaders)
+add_dependencies(vulkan_fem shaders_build)
+
+add_custom_command(TARGET vulkan_fem POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_BINARY_DIR}/shaders"
+        "$<TARGET_FILE_DIR:vulkan_fem>/shaders"
+        )
 
 file(GLOB_RECURSE ALL_SOURCE_FILES *.cpp *.h)
 
