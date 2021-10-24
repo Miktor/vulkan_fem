@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <stdexcept>
 #define USE_MATH_DEFINES
 #include "fem.h"
@@ -88,6 +89,7 @@ class ModelFactory {
     std::vector<Load<2>> loads = {{2, {50.0, 50.0}}};
 
     const auto &[v, i] = Convert2dMesh(4, 1, vertices, indices);
+    std::cout << v << std::endl << i << std::endl;
     return std::make_shared<Model<2>>(std::make_shared<RectangleElement>(), v, i, constraints, loads, 0.2e4,
                                       0.3);  // 200GPa, 0.3 Young, Poisson's for steel
   }

@@ -1,4 +1,5 @@
 #include "vulcan.h"
+#include <vulkan/vulkan_core.h>
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -107,7 +108,7 @@ void Application::InitVulkan() {
   CreateSwapChain();
   CreateImageViews();
   CreateRenderPass();
-  CreateGraphicsPipeline();
+  graphics_pipeline_ = CreateGraphicsPipeline(device_, swap_chain_extent_, pipeline_layout_, render_pass_, VK_POLYGON_MODE_FILL);
   CreateFramebuffers();
   CreateCommandPool();
   CrateBuffers();
@@ -422,12 +423,13 @@ void Application::CreateRenderPass() {
   }
 }
 
-void Application::CreateGraphicsPipeline() {
+VkPipeline Application::CreateGraphicsPipeline(VkDevice device, const VkExtent2D &swap_chain_extent, VkPipelineLayout pipeline_layout,
+                                               VkRenderPass render_pass, VkPolygonMode mode) {
   auto vert_shader_code = ReadFile("build/shaders/shaders/shader.vert.spv");
   auto frag_shader_code = ReadFile("build/shaders/shaders/shader.frag.spv");
 
-  VkShaderModule vert_shader_module = CreateShaderModule(vert_shader_code);
-  VkShaderModule frag_shader_module = CreateShaderModule(frag_shader_code);
+  VkShaderModule vert_shader_module = CreateShaderModule(device, vert_shader_code);
+  VkShaderModule frag_shader_module = CreateShaderModule(device, frag_shader_code);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info{};
   vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -462,14 +464,14 @@ void Application::CreateGraphicsPipeline() {
   VkViewport viewport{};
   viewport.x = 0.0F;
   viewport.y = 0.0F;
-  viewport.width = static_cast<float>(swap_chain_extent_.width);
-  viewport.height = static_cast<float>(swap_chain_extent_.height);
+  viewport.width = static_cast<float>(swap_chain_extent.width);
+  viewport.height = static_cast<float>(swap_chain_extent.height);
   viewport.minDepth = 0.0F;
   viewport.maxDepth = 1.0F;
 
   VkRect2D scissor{};
   scissor.offset = {0, 0};
-  scissor.extent = swap_chain_extent_;
+  scissor.extent = swap_chain_extent;
 
   VkPipelineViewportStateCreateInfo viewport_state{};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -514,7 +516,7 @@ void Application::CreateGraphicsPipeline() {
   pipeline_layout_info.setLayoutCount = 0;
   pipeline_layout_info.pushConstantRangeCount = 0;
 
-  if (vkCreatePipelineLayout(device_, &pipeline_layout_info, nullptr, &pipeline_layout_) != VK_SUCCESS) {
+  if (vkCreatePipelineLayout(device, &pipeline_layout_info, nullptr, &pipeline_layout) != VK_SUCCESS) {
     throw std::runtime_error("failed to create pipeline layout!");
   }
 
@@ -528,17 +530,20 @@ void Application::CreateGraphicsPipeline() {
   pipeline_info.pRasterizationState = &rasterizer;
   pipeline_info.pMultisampleState = &multisampling;
   pipeline_info.pColorBlendState = &color_blending;
-  pipeline_info.layout = pipeline_layout_;
-  pipeline_info.renderPass = render_pass_;
+  pipeline_info.layout = pipeline_layout;
+  pipeline_info.renderPass = render_pass;
   pipeline_info.subpass = 0;
   pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
-  if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &graphics_pipeline_) != VK_SUCCESS) {
+  VkPipeline graphics_pipeline;
+  if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &graphics_pipeline) != VK_SUCCESS) {
     throw std::runtime_error("failed to create graphics pipeline!");
   }
 
-  vkDestroyShaderModule(device_, frag_shader_module, nullptr);
-  vkDestroyShaderModule(device_, vert_shader_module, nullptr);
+  vkDestroyShaderModule(device, frag_shader_module, nullptr);
+  vkDestroyShaderModule(device, vert_shader_module, nullptr);
+
+  return graphics_pipeline;
 }
 
 void Application::CreateFramebuffers() {
@@ -770,7 +775,7 @@ void Application::DrawFrame() {
   }
 
   PreDrawFrame(image_index);
-  
+
   images_in_flight_[image_index] = in_flight_fences_[current_frame_];
 
   VkSubmitInfo submit_info{};
@@ -812,14 +817,14 @@ void Application::DrawFrame() {
   current_frame_ = (current_frame_ + 1) % kMaxFramesInFlight;
 }
 
-VkShaderModule Application::CreateShaderModule(const std::vector<char> &code) {
+VkShaderModule Application::CreateShaderModule(VkDevice device, const std::vector<char> &code) {
   VkShaderModuleCreateInfo create_info{};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   create_info.codeSize = code.size();
   create_info.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
   VkShaderModule shader_module;
-  if (vkCreateShaderModule(device_, &create_info, nullptr, &shader_module) != VK_SUCCESS) {
+  if (vkCreateShaderModule(device, &create_info, nullptr, &shader_module) != VK_SUCCESS) {
     throw std::runtime_error("failed to create shader module!");
   }
 

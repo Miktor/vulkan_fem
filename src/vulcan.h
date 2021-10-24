@@ -102,7 +102,8 @@ class Application {
   void CreateSwapChain();
   void CreateImageViews();
   void CreateRenderPass();
-  void CreateGraphicsPipeline();
+  static VkPipeline CreateGraphicsPipeline(VkDevice device, const VkExtent2D &swap_chain_extent, VkPipelineLayout pipeline_layout,
+                                           VkRenderPass render_pass, VkPolygonMode mode);
   void CreateFramebuffers();
   void CreateCommandPool();
 
@@ -111,7 +112,7 @@ class Application {
   void DrawFrame();
 
   uint32_t FindMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);
-  VkShaderModule CreateShaderModule(const std::vector<char> &code);
+  static VkShaderModule CreateShaderModule(VkDevice device, const std::vector<char> &code);
   static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
   static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
   VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
