@@ -17,37 +17,33 @@ class ModelFactory {
       case 1:
         return std::make_tuple(vertices, indices);
       case 2: {
-        std::vector<Vertex3> res_vertices;
+        std::vector<Vertex3> res_vertices = vertices;
         std::vector<uint16_t> res_indices;
         res_vertices.reserve(vertices.size() * 2);
         res_indices.reserve(indices.size() * 2);
 
-        int32_t min_ind = -1;
-
         for (auto it = indices.begin(); it != indices.end(); it += elem_size) {
-          for (auto v_it = it; v_it - it < elem_size; ++v_it) {
-            res_indices.push_back(*v_it);
-            if (*v_it > min_ind) {
-              res_vertices.push_back(vertices[*v_it]);
-            }
-            min_ind = std::max<int32_t>(min_ind, *v_it);
-          }
-
           for (auto e_it = it + 1; e_it - it < elem_size; ++e_it) {
             auto b = e_it - 1;
             auto e = e_it;
 
             auto x = (vertices[*e] + vertices[*b]) / 2;
             res_vertices.emplace_back(x);
+
+            res_indices.push_back(*b);
             res_indices.push_back(res_vertices.size() - 1);
           }
 
           auto b = it + (elem_size - 1);
           auto e = it;
           auto x = (vertices[*e] + vertices[*b]) / 2;
+
+          res_indices.push_back(*b);
           res_vertices.emplace_back(x);
           res_indices.push_back(res_vertices.size() - 1);
         }
+
+        std::cout << "v: " << res_vertices << std::endl << "i: " << res_indices << std::endl;
         return std::make_tuple(res_vertices, res_indices);
       }
       default:
