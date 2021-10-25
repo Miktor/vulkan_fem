@@ -66,9 +66,9 @@ class ModelFactory {
     std::vector<Constraint> constraints = {{0, Constraint::kUxy}, {1, Constraint::kUxy}};
     std::vector<Load<2>> loads = {{2, {50.0, 50.0}}};
 
-    const auto &[v, i] = Convert2dMesh(3, 2, vertices, indices);
+    const auto &[v, i] = Convert2dMesh(3, 1, vertices, indices);
 
-    return std::make_shared<Model<2>>(std::make_shared<Triangle2Element>(), v, i, constraints, loads, 0.2e4,
+    return std::make_shared<Model<2>>(std::make_shared<TriangleElement>(), v, i, constraints, loads, 0.2e4,
                                       0.3);  // 200GPa, 0.3 Young, Poisson's for steel
   }
 
