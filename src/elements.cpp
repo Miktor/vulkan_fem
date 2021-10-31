@@ -2,6 +2,25 @@
 
 namespace vulkan_fem {
 
+template<uint32_t DIM>
+Eigen::Matrix<Precision, 3, Eigen::Dynamic> Element<DIM>::MakeStrainMatrix(const uint16_t element_count,
+                                                                      const MatrixFixedRows<DIM> &elem_matrix) const {
+  Eigen::Matrix<Precision, 3, Eigen::Dynamic> strain_matrix(3, element_count * DIM);
+
+  for (int i = 0; i < element_count; ++i) {
+    strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);  // Nix
+    strain_matrix(0, 2 * i + 1) = 0.0F;
+
+    strain_matrix(1, 2 * i + 0) = 0.0F;
+    strain_matrix(1, 2 * i + 1) = elem_matrix(1, i);  // Niy
+
+    strain_matrix(2, 2 * i + 0) = elem_matrix(1, i);  // Niy
+    strain_matrix(2, 2 * i + 1) = elem_matrix(0, i);  // Nix
+  }
+
+  return strain_matrix;
+}
+
 TetrahedronElement::TetrahedronElement() : Element<3>(4, 1) {}
 
 std::vector<std::vector<Precision>> TetrahedronElement::GetIntegrationPoints() const {

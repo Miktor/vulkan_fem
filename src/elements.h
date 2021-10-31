@@ -24,15 +24,22 @@ class Element {
   [[nodiscard]] virtual std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const = 0;
 
   // calculate partial derivatives
-  virtual MatrixFixedRows<DIM, Precision> CalcDShape(const std::vector<Precision> &ip) = 0;
+  [[nodiscard]] virtual MatrixFixedRows<DIM, Precision> CalcDShape(const std::vector<Precision> &ip) = 0;
+
+  // B matrix
+  // [ Nix 0
+  // [ 0   Niy
+  // [ Niy Nix
+  [[nodiscard]] virtual Eigen::Matrix<Precision, 3, Eigen::Dynamic> MakeStrainMatrix(const uint16_t element_count,
+                                                                                     const MatrixFixedRows<DIM> &elem_matrix) const;
 
  protected:
   Element(uint32_t element_count, uint32_t order) : element_count_(element_count), order_(order) {}
   virtual ~Element() = default;
 
  private:
-  uint32_t element_count_;
-  uint32_t order_;
+  const uint32_t element_count_;
+  const uint32_t order_;
 };
 
 class ElementIndices {};
@@ -47,7 +54,7 @@ class TetrahedronElement : public Element<3> {
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override;
   [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override;
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override;
-  MatrixFixedRows<3, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
+  [[nodiscard]] MatrixFixedRows<3, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
 };
 
 class TriangleElement : public Element<2> {
@@ -55,12 +62,9 @@ class TriangleElement : public Element<2> {
   TriangleElement();
 
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override;
-
   [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override;
-
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override;
-
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
+  [[nodiscard]] MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
 };
 
 class Triangle2Element : public Element<2> {
@@ -70,7 +74,7 @@ class Triangle2Element : public Element<2> {
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override;
   [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override;
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override;
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
+  [[nodiscard]] MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> & /*ip*/) override;
 };
 
 class RectangleElement : public Element<2> {
@@ -80,7 +84,7 @@ class RectangleElement : public Element<2> {
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override;
   [[nodiscard]] Precision GetIntegrationWeight(uint8_t /*p*/) const override;
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override;
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override;
+  [[nodiscard]] MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override;
 };
 
 class Rectangle2Element : public Element<2> {
@@ -90,7 +94,7 @@ class Rectangle2Element : public Element<2> {
   [[nodiscard]] std::vector<std::vector<Precision>> GetIntegrationPoints() const override;
   [[nodiscard]] Precision GetIntegrationWeight(uint8_t p) const override;
   [[nodiscard]] std::vector<Precision> CalcShape(const std::vector<Precision> &ip) const override;
-  MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override;
+  [[nodiscard]] MatrixFixedRows<2, Precision> CalcDShape(const std::vector<Precision> &ip) override;
 };
 
 }  // namespace vulkan_fem

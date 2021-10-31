@@ -113,7 +113,7 @@ class Model {
       Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> element_stiffness_matrix;
       element_stiffness_matrix.setZero(element_count * DIM, element_count * DIM);
       for (const auto &[elem_matrix, w, J_det] : CalcElementMatrix(element_type_, elem_transform)) {
-        const auto b_matrix = MakeStrainMatrix(element_count, elem_matrix);
+        const auto b_matrix = element_type_->MakeStrainMatrix(element_count, elem_matrix);
         spdlog::info("\nB: {}", b_matrix);
 
         element_stiffness_matrix += b_matrix.transpose() * d_matrix * b_matrix * J_det * w;
@@ -218,25 +218,6 @@ class Model {
     }
 
     return result;
-  }
-
-  // B matrix
-  // [ Nix 0
-  // [ 0   Niy
-  // [ Niy Nix
-  Eigen::Matrix<Precision, 3, Eigen::Dynamic> MakeStrainMatrix(const uint16_t element_count, const MatrixFixedRows<DIM> &elem_matrix) {
-    Eigen::Matrix<Precision, 3, Eigen::Dynamic> strain_matrix(3, element_count * DIM);
-    for (int i = 0; i < element_count; ++i) {
-      strain_matrix(0, 2 * i + 0) = elem_matrix(0, i);  // Nix
-      strain_matrix(0, 2 * i + 1) = 0.0F;
-
-      strain_matrix(1, 2 * i + 0) = 0.0F;
-      strain_matrix(1, 2 * i + 1) = elem_matrix(1, i);  // Niy
-
-      strain_matrix(2, 2 * i + 0) = elem_matrix(1, i);  // Niy
-      strain_matrix(2, 2 * i + 1) = elem_matrix(0, i);  // Nix
-    }
-    return strain_matrix;
   }
 
   std::shared_ptr<Element<DIM>> element_type_;
