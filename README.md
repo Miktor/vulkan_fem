@@ -4,9 +4,9 @@ Finite Element Method implementation in c++ with Vulkan fronted.
 
 ## Controls
 
-**1** - load model with triangular elements
-**2** - load model with rectangular elements
-**space** - simulate models with top nodes fixed and load force to BR corner.
+* __1__ load model with triangular elements
+* __2__ load model with rectangular elements
+* __space__ simulate models with top nodes fixed and load force to BR corner.
 
 ## Dependencies
 
