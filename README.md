@@ -26,3 +26,5 @@ make
 ```
 
 To run, go to root directory and execute ```./build/vulkan_fem```
+
+Build tested on MacOS 11.6.
