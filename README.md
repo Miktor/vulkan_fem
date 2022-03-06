@@ -6,7 +6,7 @@ Finite Element Method implementation in c++ with Vulkan fronted.
 Supports first order 2D elements such as triangular and quad and boundary conditions.
 
 TODO:
-* Support second order and hier elements
+* Support second order and higher elements
 * Research and implement thin shell element.
 
 ## Controls
